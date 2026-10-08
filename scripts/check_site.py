@@ -37,6 +37,9 @@ for page in root.glob('*.html'):
             subprocess.run(['node', '--check', tmp.name], check=True)
 
 game = (root / 'index.html').read_text(encoding='utf-8')
+for script in (root / 'assets').glob('*.js'):
+    subprocess.run(['node', '--check', str(script)], check=True)
+    assert '/Users/' not in script.read_text(encoding='utf-8')
 for asset in ('assets/court.mp4', 'assets/lawyer-portrait.jpg'):
     assert asset in game and (root / asset).is_file()
 assert (root / 'assets/court.mp4').stat().st_size > 1_000_000

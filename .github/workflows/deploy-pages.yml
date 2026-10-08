@@ -24,6 +24,13 @@ jobs:
         run: |
           python3 scripts/build.py
           python3 scripts/check_site.py
+          node --test scripts/engine.test.cjs
+          git diff --exit-code -- site
+      - name: Verify published sources match GitHub main
+        run: |
+          remote_sha="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$remote_sha" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload website
