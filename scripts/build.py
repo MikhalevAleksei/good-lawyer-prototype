@@ -7,7 +7,7 @@ root = Path(__file__).resolve().parents[1]
 fragment = (root / 'source/interface.html').read_text(encoding='utf-8')
 fragment = fragment.replace('__PORTRAIT__', 'assets/lawyer-portrait.jpg')
 fragment = fragment.replace('__VIDEO__', 'assets/court.mp4')
-for name in ('game.css', 'cases.js', 'engine.js', 'game.js'):
+for name in ('game.css', 'game-webmcp.js', 'cases.js', 'engine.js', 'game.js'):
     source = root / 'source' / name
     shutil.copyfile(source, root / 'site/assets' / name)
     version = hashlib.sha256(source.read_bytes()).hexdigest()[:12]

@@ -158,5 +158,43 @@
   });
   if('scrollRestoration'in history)history.scrollRestoration='manual';
   window.addEventListener('pageshow',e=>{if(e.persisted){game.reset();started=false;ui={desk:'cases',phone:'chat',agent:'mark',device:'laptop',allTransactions:false};showMenu();}});
+  // WebMCP exposes the ordinary screen/day actions, never raw career mutation.
+  const toolState = () => ({ready:true,screen,started,day:game.s.day,chapter:game.s.stage,
+    reputation:game.s.rep,professional:game.s.professional,training:!!game.s.training,
+    ending:game.s.ending || null,desk:ui.desk,phone:ui.phone,device:ui.device,
+    overlayOpen:!$('#overlay').hidden,
+    activeCase:game.s.active ? {id:game.s.active.id,phase:game.s.active.phase,
+      actionPoints:game.s.active.ap,deadline:game.s.active.deadline,pendingOrders:game.s.active.pending.length} : null});
+  function requireWorkspace() {
+    if(screen !== 'game')throw new Error('Start or continue the game first.');
+    if(!$('#overlay').hidden)throw new Error('Finish the current dialog or court scene first.');
+    if(game.s.ending)throw new Error('The current campaign has ended.');
+  }
+  const webmcp = window.GameWebMCP?.register({id:'good-lawyer',
+    version:new URL(assetScript.src,location.href).searchParams.get('v') || 'dev',tools:[
+    {name:'lawyer_get_state',description:'Read the visible screen, chapter, day, case phase and action points. Omits player names and messages.',readOnly:true,execute:toolState},
+    {name:'lawyer_get_performance',description:'Read browser frame timing and video state. Browser FPS is measured separately from gameplay state.',readOnly:true,execute:() => ({frameTiming:webmcp?.diagnostics(),videoPlaying:!!finishMovie})},
+    {name:'lawyer_start',description:'Start the first campaign, or continue the current session from the menu. Does not reset an existing career.',execute:() => {
+      if(!$('#overlay').hidden)throw new Error('Finish the current dialog first.');
+      if(!started)newGame();else if(game.s.ending&&!game.s.training)throw new Error('The campaign has ended.');else if(screen==='menu')enterGame();
+      return toolState();
+    }},
+    {name:'lawyer_open_menu',description:'Return to the normal menu without resetting career state. Finish the court scene first.',execute:() => {
+      if(!$('#overlay').hidden)throw new Error('Finish the current dialog or court scene first.');
+      showMenu();return toolState();
+    }},
+    {name:'lawyer_open_view',description:'Open a laptop program or phone application through the usual navigation. Opening mail marks it read.',
+      inputSchema:{type:'object',properties:{view:{type:'string',enum:['cases','dossier','witness','plan','career','news','mail','chat','bank']}},required:['view'],additionalProperties:false},
+      execute:({view}) => {
+        requireWorkspace();
+        if(view==='chat'||view==='bank'){ui.phone=view;ui.device='phone';}else navigate(view);
+        render();return toolState();
+      }},
+    {name:'lawyer_advance_day',description:'Press the ordinary Next day button. Deadlines, orders and costs follow the existing game rules.',execute:() => {
+      requireWorkspace();const button=$('[data-action="day"]');
+      if(!button||button.disabled)throw new Error('Next day is unavailable in this phase.');
+      button.click();return toolState();
+    }}
+  ]});
   showMenu();
 })();

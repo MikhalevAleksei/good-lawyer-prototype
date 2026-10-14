@@ -106,3 +106,14 @@ Workflow запускается при отправке в `main` и вручн�
 До загрузки артефакта проверяется SHA версии на удалённой ветке GitHub. Повторная сборка должна совпасть с закоммиченным `site`; после проверок артефакт публикуется через GitHub Pages. Исправления требуют нового коммита, отправки и проверки. Если состояние GitHub не подтверждено или сборка отличается, публикация останавливается.
 
 Прототип работает без внешних библиотек и игровых сетевых API. Персонажи, дела и судебная система вымышлены.
+
+
+## WebMCP · 13.10.2026
+
+Шесть команд: `lawyer_get_state`, `lawyer_get_performance`, `lawyer_start`, `lawyer_open_menu`, `lawyer_open_view({view})`, `lawyer_advance_day`. Используются текущие действия интерфейса и правила движка; повторный start продолжает текущую сессию без сброса. Смена дня запрещена, когда штатная кнопка недоступна. view: cases/dossier/witness/plan/career/news/mail/chat/bank. Имя игрока и тексты сообщений не экспортируются.
+
+Транспорт `source/game-webmcp.js` регистрирует инструменты через document.modelContext (или navigator.modelContext прежних реализаций) с проверкой аргументов, отменой и защитой от ошибок iframe-политики. В браузере без API игра продолжает работать; локальная диагностика: `GameWebMCP.listTools()` / `.diagnostics()`. browserFps — requestAnimationFrame. В чужом iframe хосту нужна политика tools, сторонние origins не разрешены.
+
+`python3 scripts/build.py`, `python3 scripts/check_site.py`, `node --test scripts/engine.test.cjs` — PASS (26/26). Реальный native WebMCP подтвердил меню, запуск, программы ноутбука, смену дня с принятым делом и продолжение дня 2 без сброса. Доказательства: `reports/webmcp-2026-10-13/`. Нативная регистрация общего транспорта и её ошибки проверены 7 Node-сценариями в Unity-репозитории Tools/WebMcp/transport.test.cjs. Новая версия на GitHub Pages в этом запросе не публиковалась.
+
+Справка: https://developer.chrome.com/docs/ai/webmcp/imperative-api .

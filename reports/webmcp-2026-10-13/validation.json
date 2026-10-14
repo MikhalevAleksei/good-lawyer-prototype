@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-13",
+  "status": "implemented_and_locally_verified",
+  "published": false,
+  "shared_runtime_sha256": "963f9c9b4b1cd7b886f474b5cf3c723730a5ed5c6a5111c9eb99ea7b61fce1e5",
+  "games": {
+    "Beyond the Crest": {
+      "tools": 7,
+      "unity_playmode_passed": 3,
+      "native_browser_verified": true,
+      "webgl_build": "Succeeded",
+      "startup_bytes": 16343810
+    },
+    "Kingdom Knight": {
+      "tools": 8,
+      "unit_passed": 261,
+      "typecheck": "PASS",
+      "lint": "PASS",
+      "build": "PASS",
+      "release_check": "PASS",
+      "native_browser_verified": true
+    },
+    "Good Lawyer": {
+      "tools": 6,
+      "engine_tests_passed": 26,
+      "static_build_check": "PASS",
+      "native_browser_verified": true
+    }
+  },
+  "transport_tests_passed": 7,
+  "native_tool_count": 21,
+  "automated_tests_passed": 297,
+  "limitations": [
+    "No external platform upload or publication in this task.",
+    "Browser requestAnimationFrame rate is distinct from Unity FPS.",
+    "Cross-origin iframe policy tools must be allowed by the host.",
+    "Physical mobile devices and online multiplayer sessions were not tested in this task."
+  ],
+  "preview_url": "http://127.0.0.1:8944/qa.html"
+}
