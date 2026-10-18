@@ -2,3 +2,6 @@ __pycache__/
 .DS_Store
 *.pyc
 node_modules/
+
+# Blender backup files are not release sources.
+*.blend[0-9]*

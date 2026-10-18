@@ -1,0 +1,73 @@
+{
+  "service": "Tripo Studio",
+  "model": "H3.1 Best Quality",
+  "createdDate": "2026-10-18",
+  "generationId": "ab49d2c1-40c6-4982-ad98-74067655ec70",
+  "prompt": "A single elegant classic lawyer's office armchair, dark forest green leather with deep diamond button tufting on a tall gently curved backrest, thick padded seat and rounded upholstered armrests. Rich dark walnut wooden frame, carved wooden arm supports, four sturdy short wooden legs, subtle antique brass nailhead trim. Refined traditional European study furniture, realistic proportions, polished craftsmanship, visible leather grain and stitching, rich but restrained details. One standalone chair only, no person, no desk, no room, no floor platform, no pedestal, no wheels, no text, no logo. Complete model with all sides, clean usable geometry and realistic PBR materials.",
+  "credits": 55,
+  "additionalCredits": 0,
+  "export": {
+    "format": "GLB",
+    "textureResolution": "4K",
+    "texturesEmbedded": true,
+    "originalBytes": 65269148,
+    "originalTriangles": 1972196,
+    "originalVertices": 1019156,
+    "images": 3
+  },
+  "originalSHA256": "8d709cf5c2de3a1d893f18ab07293c7f6cfec5503ebe8a9794068e19d4ee460a",
+  "optimizedSHA256": "fe83a1b7721683862371b72b3eb3824bc3f823a2ab2d2e03b0be37094d591302",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-chair.glb",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T09:24:39.219893+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 65269148,
+    "inputTriangles": 1972196,
+    "targetTriangles": 22000,
+    "outputTriangles": 22000,
+    "outputBytes": 1827208,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          1024,
+          1024
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          1024,
+          1024
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  }
+}

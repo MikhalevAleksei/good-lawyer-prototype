@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="assets/game.css">
+<link rel="stylesheet" href="assets/office.css">
 <div id="good-lawyer" lang="ru" data-device="laptop">
   <section id="menu" class="main-menu" aria-labelledby="menu-title">
     <div class="menu-copy">
@@ -17,8 +18,25 @@
     <div class="menu-art"><img src="__PORTRAIT__" alt="Адвокат в зале суда"><div class="art-caption"><span>01 / СЕВЕРНЫЙ БЕРЕГ</span><p>Вы защищаете чужую свободу.<br>Пока не приходится защищать свою.</p></div></div>
   </section>
   <main id="workspace" hidden>
-    <div class="toolbar"><div><span class="live-dot"></span><span id="chapter-label">Северный берег</span></div><button class="quiet" data-action="menu">☰ &nbsp; Меню</button></div>
+    <div class="toolbar"><button class="quiet room-return" data-action="room" hidden>← В кабинет</button><div><span class="live-dot"></span><span id="chapter-label">Северный берег</span></div><button class="quiet" data-action="menu">☰ &nbsp; Меню</button></div>
     <div id="training-banner" class="training-banner" hidden>Тренировка · ресурсы карьеры сохранены <button data-action="leave-training">Вернуться в карьеру →</button></div>
+
+    <section id="office-room" class="office-room" aria-label="Трёхмерный кабинет адвоката" hidden>
+      <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 ₽</strong></div></div></header>
+      <div id="room-viewport" class="room-viewport">
+        <img class="room-preview" src="assets/models/office-preview.png" alt="Кабинет адвоката: ноутбук на столе, архив слева, кресло и карта справа, две папки и перьевая ручка">
+        <div id="room-webgl" class="room-webgl"></div><div id="room-css3d" class="room-css3d"></div>
+        <div id="room-loading" class="room-loading" role="status">Открываем кабинет…</div>
+        <div id="room-object-labels" class="room-object-labels"></div>
+        <div class="room-camera" aria-label="Осмотр кабинета"><button data-room-camera="left" aria-label="Осмотреть кабинет слева">↶</button><button data-room-camera="reset">Общий вид</button><button data-room-camera="right" aria-label="Осмотреть кабинет справа">↷</button></div>
+        <p id="room-hint" class="room-hint">Выберите предмет, чтобы начать работу</p>
+        <div id="room-screen" class="room-screen" aria-label="Рабочий стол ноутбука"></div>
+      </div>
+      <nav id="room-mobile-programs" class="room-mobile-programs" aria-label="Программы ноутбука"></nav>
+      <nav id="room-shortcuts" class="room-shortcuts" aria-label="Предметы кабинета"></nav>
+      <div class="room-news"><button data-room-view="news" class="room-news-title">НОВОСТИ</button><div class="room-news-window"><p id="room-news-text"></p></div><button id="room-news-pause" data-room-news-pause="true" aria-label="Приостановить бегущую строку" aria-pressed="false">Ⅱ</button></div>
+      <div id="room-alert" class="room-alert" hidden></div>
+    </section>
     <nav class="device-switch" aria-label="Устройства"><button data-device="laptop" aria-pressed="true">Ноутбук</button><button data-device="phone" aria-pressed="false">Телефон <span id="phone-badge"></span></button></nav>
     <div class="stage">
       <section class="laptop-col" aria-label="Ноутбук">
@@ -42,6 +60,8 @@
   </main>
   <div id="overlay" class="overlay" hidden></div>
 </div>
+<script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.min.js"}}</script>
+<script type="module" src="assets/office.mjs"></script>
 <script src="assets/game-webmcp.js"></script>
 <script src="assets/cases.js"></script>
 <script src="assets/engine.js"></script>

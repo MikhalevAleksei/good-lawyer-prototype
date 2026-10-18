@@ -1,0 +1,152 @@
+{
+  "generator": "Blender 4.5.14",
+  "source": "Native procedural Blender office geometry; user office sketch reference; existing project portrait texture. Chair generated in Tripo Studio and optimized in Blender.",
+  "tripoUsed": true,
+  "tripo": {
+    "used": true,
+    "source": "Tripo Studio generation through the native UI",
+    "model": "H3.1 Best Quality",
+    "generationId": "ab49d2c1-40c6-4982-ad98-74067655ec70",
+    "referenceSource": "art/office/tripo-chair.glb",
+    "sourceSha256": "fe83a1b7721683862371b72b3eb3824bc3f823a2ab2d2e03b0be37094d591302",
+    "originalDownloadSha256": "8d709cf5c2de3a1d893f18ab07293c7f6cfec5503ebe8a9794068e19d4ee460a",
+    "sourceAssetIsOptimized": true,
+    "sourceBytes": 1827208,
+    "sourceTriangles": 22000,
+    "optimizedTriangles": 22000,
+    "textures": [
+      {
+        "name": "0-chair-basecolor",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "2-chair-orm",
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "1-chair-normal",
+        "width": 1024,
+        "height": 1024
+      }
+    ],
+    "materialAdjustment": "Preserved colour texture and tufting; dielectric leather/wood at metallic 0.04, roughness 0.68, normal scale 0.28",
+    "placement": "High-backed chair, normalized into the original chair bounds, front toward the camera",
+    "targetBounds": [
+      2.08,
+      1.9,
+      3.02
+    ]
+  },
+  "coordinateSystem": "glTF Y-up; positions converted from Blender Z-up (x, y, z) to (x, z, -y)",
+  "screen": {
+    "width": 4.45,
+    "height": 2.7688888888888887,
+    "anchor": "ScreenAnchor",
+    "localPlane": "XY",
+    "domWidth": 900,
+    "domHeight": 560,
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "unparented": true,
+    "blenderRotation": [
+      1.5707963267948966,
+      0,
+      0
+    ],
+    "glTFBasisCorrection": "The empty uses the CSS local XY basis, facing +Z in glTF. Its Blender XY basis faces -Y. The export step removes Blender exporter empty-basis compensation."
+  },
+  "camera": {
+    "name": "Camera",
+    "position": [
+      1.18,
+      6.03,
+      11.85
+    ],
+    "target": [
+      -0.08,
+      2.48,
+      -0.45
+    ],
+    "fov": 26.857512426358763,
+    "fovAxis": "vertical",
+    "aspect": 1.6941176470588235,
+    "blenderPosition": [
+      1.18,
+      -11.85,
+      6.03
+    ],
+    "blenderTarget": [
+      -0.08,
+      0.45,
+      2.48
+    ]
+  },
+  "objects": [
+    "Laptop",
+    "ScreenAnchor",
+    "Phone",
+    "FolderCurrent",
+    "FolderArchive",
+    "FountainPen",
+    "Bookshelf",
+    "Mirror",
+    "CityMap",
+    "Lawyer"
+  ],
+  "triangles": 54684,
+  "meshObjects": 70,
+  "materials": 34,
+  "labelAnchors": {
+    "Laptop": [
+      -1.4,
+      4.48,
+      0.32
+    ],
+    "Phone": [
+      3.78,
+      3.28,
+      1.5
+    ],
+    "FolderCurrent": [
+      1.75,
+      1.9,
+      1.1
+    ],
+    "FolderArchive": [
+      2.5,
+      1.9,
+      0.26
+    ],
+    "FountainPen": [
+      1.95,
+      1.75,
+      1.96
+    ],
+    "Bookshelf": [
+      -4.98,
+      4.9,
+      -3.5
+    ],
+    "Mirror": [
+      -5.7,
+      4.7,
+      -2.2
+    ],
+    "CityMap": [
+      4.4,
+      4.9,
+      -3.5
+    ],
+    "Lawyer": [
+      1.99,
+      4.56,
+      -3.9
+    ]
+  },
+  "glbBytes": 3747552
+}
