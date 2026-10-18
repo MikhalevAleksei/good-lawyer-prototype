@@ -7,9 +7,9 @@ import {RoomEnvironment} from './vendor/three/addons/environments/RoomEnvironmen
 const MODEL=new URL('__OFFICE_MODEL__',import.meta.url);
 const MANIFEST=new URL('__OFFICE_MANIFEST__',import.meta.url);
 const ACTIONS={Chair:'career',TripoChair:'career',Laptop:'laptop',Phone:'phone',FolderCurrent:'dossier',FolderArchive:'archive',FountainPen:'notes',Bookshelf:'archive',Mirror:'wardrobe',CityMap:'city',Lawyer:'career'};
-const TITLES={Chair:'Кресло адвоката · профиль',TripoChair:'Кресло адвоката · профиль',Laptop:'Приблизиться к ноутбуку',Phone:'Приблизиться к телефону',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архив практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска',Lawyer:'Профиль адвоката'};
+const TITLES={Desk:'Письменный стол',WritingDesk:'Письменный стол',BankersLamp:'Настольная лампа',Cactus:'Кактус',OfficePlant:'Растение',Chair:'Кресло адвоката · профиль',TripoChair:'Кресло адвоката · профиль',Laptop:'Ноутбук · дела и подготовка',Phone:'Телефон · переписка и банк',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архивный шкаф · история практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска',Lawyer:'Профиль адвоката'};
 let state=null;
-function actionOf(object){for(let o=object;o;o=o.parent)if(ACTIONS[o.name])return o.name;return null;}
+function objectOf(object){for(let o=object;o;o=o.parent)if(TITLES[o.name])return ({WritingDesk:'Desk',OfficePlant:'Cactus',Chair:'TripoChair'})[o.name]||o.name;return null;}
 function create(options){
  const {viewport,canvasHost,cssHost,screenElement,phoneElement,onOpen}=options;
  const s=state={...options,active:false,ready:false,failed:false,focus:null,transition:null,quality:options.quality||'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,raf:0,frames:0,meshes:0,triangles:0,lastError:null};
@@ -91,9 +91,9 @@ function create(options){
  s.setFocus=device=>{
   const focus=device==='laptop'||device==='phone'?device:null;
   if(s.focus===focus)return;
-  s.focus=focus;viewport.dataset.focus=focus||'overview';resize(false);moveToTarget(true);
+  s.clearTooltips?.();s.focus=focus;viewport.dataset.focus=focus||'overview';resize(false);moveToTarget(true);
  };
- s.reset=()=>{s.focus=null;viewport.dataset.focus='overview';resize(false);moveToTarget(true);};
+ s.reset=()=>{s.clearTooltips?.();s.focus=null;viewport.dataset.focus='overview';resize(false);moveToTarget(true);};
  s.finishMotion=()=>{if(s.transition){applyPose(s.transition.to);finishTransition();invalidate();}};
  new ResizeObserver(()=>resize()).observe(viewport);
  function invalidate(){if(s.active&&!document.hidden&&!s.raf)s.raf=requestAnimationFrame(draw);}
@@ -109,22 +109,58 @@ function create(options){
   renderer.render(scene,camera);cssRenderer.render(cssScene,camera);s.frames++;projectLabels();
   if(moving)invalidate();
  }
+ // Labels remain quiet until a real object is hovered, touched or keyboard-focused.
+ // They never intercept the pointer, so the model remains the click target.
+ let down=null,hover=null,focusedLabel=null,touchTimer=0;
+ function showLabel(key){
+  if(key===hover)return;
+  hover=key;renderer.domElement.style.cursor=key&&ACTIONS[key]?'pointer':'grab';
+  hint.textContent=key?TITLES[key]:'Выберите предмет, чтобы начать работу';projectLabels();
+ }
+ function clearTooltips(){clearTimeout(touchTimer);hover=null;focusedLabel=null;renderer.domElement.style.cursor='grab';hint.textContent='Выберите предмет, чтобы начать работу';projectLabels();}
+ s.clearTooltips=clearTooltips;
  function projectLabels(){
   if(!s.ready)return;
+  const selected=focusedLabel||hover;
   for(const label of viewport.querySelectorAll('[data-object]')){
    const point=s.manifest.labelAnchors[label.dataset.object];
    if(!point){label.hidden=true;continue;}
-   const v=new THREE.Vector3(...point).project(camera);label.hidden=!!s.focus||v.z>1||v.z<0||Math.abs(v.x)>1.02||Math.abs(v.y)>1.1;
-   label.style.left=((v.x*.5+.5)*width)+'px';label.style.top=((-v.y*.5+.5)*height)+'px';
+   const v=new THREE.Vector3(...point).project(camera);
+   label.hidden=!s.active||s.failed||!!s.focus||!!s.transition||v.z>1||v.z<0||Math.abs(v.x)>1.02||Math.abs(v.y)>1.1;
+   label.classList.toggle('is-visible',!label.hidden&&label.dataset.object===selected);
+   if(label.hidden)continue;
+   const half=label.offsetWidth/2+12;
+   label.style.left=Math.max(half,Math.min(width-half,(v.x*.5+.5)*width))+'px';
+   label.style.top=Math.max(label.offsetHeight+18,Math.min(height-20,(-v.y*.5+.5)*height))+'px';
   }
  }
  s.projectLabels=projectLabels;
- let down=null,hover=null;const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
- function pick(event){const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects(scene.children,true)){const action=actionOf(hit.object);if(action)return action;}return null;}
- renderer.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
- renderer.domElement.addEventListener('pointerup',e=>{if(!down||s.focus||s.transition||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7){down=null;return;}down=null;const key=pick(e);if(key)onOpen(ACTIONS[key]);});
- renderer.domElement.addEventListener('pointermove',e=>{if(!s.ready||s.focus)return;const key=pick(e);if(hover!==key){hover=key;renderer.domElement.style.cursor=key?'pointer':'grab';hint.textContent=key?TITLES[key]:'Выберите предмет, чтобы начать работу';for(const el of viewport.querySelectorAll('[data-object]'))el.classList.toggle('is-hovered',el.dataset.object===key);}});
- renderer.domElement.addEventListener('pointerleave',()=>{hover=null;hint.textContent='Выберите предмет, чтобы начать работу';});
+ const labels=viewport.querySelector('#room-object-labels');
+ labels.addEventListener('focusin',e=>{focusedLabel=e.target.closest('[data-object]')?.dataset.object||null;projectLabels();});
+ labels.addEventListener('focusout',()=>{focusedLabel=null;projectLabels();});
+ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+ function pick(event){
+  const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);
+  const hit=raycaster.intersectObjects(s.model?.children||[],true)[0];return hit?objectOf(hit.object):null;
+ }
+ renderer.domElement.addEventListener('pointerdown',e=>{if(!s.ready||s.focus||s.transition)return;down={x:e.clientX,y:e.clientY};clearTimeout(touchTimer);showLabel(pick(e));});
+ renderer.domElement.addEventListener('pointerup',e=>{
+  if(!down||s.focus||s.transition||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7){down=null;return;}
+  down=null;const key=pick(e);showLabel(key);
+  if(key&&ACTIONS[key])onOpen(ACTIONS[key]);
+  else if(e.pointerType==='touch')touchTimer=setTimeout(()=>showLabel(null),3000);
+ });
+ renderer.domElement.addEventListener('pointermove',e=>{
+  if(!s.ready||s.focus||s.transition||e.pointerType==='touch')return;
+  if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>7){showLabel(null);return;}
+  showLabel(pick(e));
+ });
+ renderer.domElement.addEventListener('pointercancel',()=>{down=null;clearTooltips();});
+ renderer.domElement.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch')showLabel(null);});
+ for(const [element,key] of [[screenElement,'Laptop'],[phoneElement,'Phone']]){
+  element.addEventListener('pointerenter',()=>{if(!s.focus&&!s.transition)showLabel(key);});
+  element.addEventListener('pointerleave',()=>showLabel(null));
+ }
  screenElement.addEventListener('click',e=>{if(!s.focus&&!e.target.closest('button'))onOpen('laptop');});
  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();fallback(new Error('WebGL context lost'));});
  renderer.domElement.addEventListener('webglcontextrestored',()=>{s.failed=false;s.lastError=null;viewport.removeAttribute('data-fallback');loading.hidden=s.ready;loading.textContent='Открываем кабинет…';loading.classList.remove('room-fallback-note');resize();invalidate();});
@@ -142,12 +178,12 @@ function create(options){
   s.surfaces={laptop:laptopObject,phone:phoneObject};s.ready=true;viewport.dataset.ready='true';viewport.dataset.focus=s.focus||'overview';loading.hidden=true;
   resize(false);moveToTarget(false);invalidate();viewport.dispatchEvent(new CustomEvent('office:loaded',{bubbles:true}));
  }).catch(fallback);
- function fallback(error){s.failed=true;s.lastError=error?.message||String(error);viewport.dataset.fallback='true';loading.hidden=false;loading.textContent='Все разделы доступны через кнопки под кабинетом.';loading.classList.add('room-fallback-note');if(s.raf)cancelAnimationFrame(s.raf);s.raf=0;window.dispatchEvent(new Event('office:unavailable'));}
+ function fallback(error){s.failed=true;s.clearTooltips?.();s.lastError=error?.message||String(error);viewport.dataset.fallback='true';loading.hidden=false;loading.textContent='Все разделы доступны через кнопки под кабинетом.';loading.classList.add('room-fallback-note');if(s.raf)cancelAnimationFrame(s.raf);s.raf=0;window.dispatchEvent(new Event('office:unavailable'));}
  resize(false);
 }
 const api={
  mount(options){if(!state)create(options);},
- setActive(active){if(!state)return;state.active=!!active;if(state.active){state.resize?.();state.invalidate?.();}else if(state.raf){cancelAnimationFrame(state.raf);state.raf=0;}},
+ setActive(active){if(!state)return;state.active=!!active;if(state.active){state.resize?.();state.invalidate?.();}else{state.clearTooltips?.();if(state.raf){cancelAnimationFrame(state.raf);state.raf=0;}}},
  sync(){state?.projectLabels?.();state?.invalidate?.();},
  setFocus(device){state?.setFocus?.(device);},
  setQuality(quality){if(!state)return;state.quality=quality;if(state.renderer)state.renderer.shadowMap.enabled=quality!=='low';state.resize?.();},

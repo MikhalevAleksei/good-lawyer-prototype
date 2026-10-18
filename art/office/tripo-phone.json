@@ -1,0 +1,96 @@
+{
+  "service": "Tripo Studio",
+  "actualModel": "H3.1 – Best Quality",
+  "generationId": "ba2b6a74-8b6f-4c45-92ee-1afea5778c65",
+  "createdDate": "2026-10-18",
+  "prompt": "A single modern smartphone standing straight upright in portrait orientation, complete slim rectangular device with a flat front display. Display width to height ratio exactly 320:662, large uninterrupted plain black screen with very thin straight bezel. No notch, no camera cutout, no front button, no text, no interface, no icons, no clock, no graphic reflections. Dark graphite metal frame, subtle rounded outer corners, flat back, realistic restrained industrial design. Screen surface is perfectly flat and uniformly blank matte black for later interface placement. Standalone phone only, no stand, no case, no cable, no charger, no hands, no table, no room, no floor platform, no logo. High quality PBR materials.",
+  "generationCredits": 55,
+  "exportAdditionalCredits": 0,
+  "originalFormat": "GLB 2.0",
+  "originalTextureResolution": "4K",
+  "originalSHA256": "8369638e1bad89ed4cb00404d94668d0d695bb2ebc48f2f6382c90e3a1c87e06",
+  "originalBytes": 60015776,
+  "originalTriangles": 1921023,
+  "originalVertices": 981443,
+  "embeddedImages": 3,
+  "originalMeshBounds": {
+    "min": [
+      -0.24410247802734375,
+      0.0,
+      -0.22149658203125
+    ],
+    "max": [
+      0.24410247802734375,
+      0.97979736328125,
+      0.22149658203125
+    ],
+    "size": [
+      0.4882049560546875,
+      0.97979736328125,
+      0.4429931640625
+    ],
+    "note": "Mesh accessor coordinates before scene node transforms"
+  },
+  "optimizedSHA256": "e249bbdaddff02f39bcdaca511c5684bef376b6f836d4aeaa6f5010dd324e3dc",
+  "provenance": "Generated from the accompanying text prompt in Tripo Studio using the user-authorized existing credit balance, then downloaded through the native Chrome export UI. No purchase or top-up.",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-phone.glb",
+  "asset": "phone",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T12:39:25.918195+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 60015776,
+    "inputTriangles": 1921023,
+    "targetTriangles": 8000,
+    "outputTriangles": 7999,
+    "outputBytes": 723116,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  },
+  "sceneFinishing": {
+    "tool": "Blender 4.5.14 LTS",
+    "builder": "art/office/build_office.py",
+    "description": "Generated device body fitted to a thin 0.87 x 0.115 x 1.72 Blender-local envelope. Existing Phone root pose and live 0.72 x 1.49 display contract preserved; clean flat front surface finished in Blender.",
+    "canonicalGeneratedInputPreserved": true
+  }
+}

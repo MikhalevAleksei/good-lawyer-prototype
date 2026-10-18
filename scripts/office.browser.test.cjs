@@ -10,7 +10,7 @@ fs.mkdirSync(out,{recursive:true});
  const browser=await chromium.launch({headless:true});
  const p=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'}),errors=[];
  p.on('pageerror',e=>errors.push(e.message));
- const click=s=>p.locator(s).click();
+ const click=async s=>{const el=p.locator(s);if(s.startsWith('[data-object=')){await el.waitFor({state:'visible'});await el.focus();await el.press('Enter');}else await el.click();};
  const room=async()=>{await click('.room-return');assert.equal(await p.locator('#office-room').isVisible(),true);};
  const ready=()=>p.waitForFunction(()=>window.OfficeRoom?.diagnostics().ready);
  try{
@@ -36,7 +36,9 @@ fs.mkdirSync(out,{recursive:true});
   await click('[data-object="FountainPen"]');assert.equal(await p.locator('#case-notes').inputValue(),'Проверить время открытия кассы.');await room();
   const contextExtension=await p.evaluate(()=>{const canvas=document.querySelector('#room-webgl canvas'),gl=canvas.getContext('webgl2');window.__officeContextExtension=gl?.getExtension('WEBGL_lose_context');if(window.__officeContextExtension)window.__officeContextExtension.loseContext();return !!window.__officeContextExtension;});
   if(contextExtension){
-   await p.waitForFunction(()=>OfficeRoom.diagnostics().fallback);await p.waitForTimeout(150);
+   await p.waitForFunction(()=>OfficeRoom.diagnostics().fallback);
+   assert.equal(await p.locator('#room-object-labels [data-object]:not([hidden])').count(),0,'WebGL fallback removes spatial labels from keyboard navigation');
+   await p.waitForTimeout(150);
    await p.evaluate(()=>window.__officeContextExtension.restoreContext());
    await p.waitForFunction(()=>!OfficeRoom.diagnostics().fallback);
    assert.equal(await p.locator('#menu').isVisible(),false,'context recovery must not reset the career');

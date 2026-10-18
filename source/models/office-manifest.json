@@ -1,6 +1,6 @@
 {
   "generator": "Blender 4.5.14",
-  "source": "Native procedural Blender office geometry; user office sketch reference; existing project portrait texture. Chair generated in Tripo Studio and optimized in Blender.",
+  "source": "Authored Blender room, folders, fountain pen and interaction surfaces; user office sketch reference; existing project portrait texture. Versioned Tripo Studio assets are optimized and fitted in Blender; see tripo and tripoAssets for actual import provenance.",
   "tripoUsed": true,
   "tripo": {
     "used": true,
@@ -21,14 +21,14 @@
         "height": 1024
       },
       {
-        "name": "2-chair-orm",
-        "width": 512,
-        "height": 512
-      },
-      {
         "name": "1-chair-normal",
         "width": 1024,
         "height": 1024
+      },
+      {
+        "name": "2-chair-orm",
+        "width": 512,
+        "height": 512
       }
     ],
     "materialAdjustment": "Preserved colour texture and tufting; dielectric leather/wood at metallic 0.04, roughness 0.68, normal scale 0.28",
@@ -39,6 +39,317 @@
       3.02
     ]
   },
+  "tripoAssets": [
+    {
+      "id": "desk",
+      "objectName": "Desk",
+      "used": true,
+      "referenceSource": "art/office/tripo-desk.glb",
+      "sourceSha256": "55e5748addbf4058a23164c48d20962f9093729ec30211acb260829ef37bbce3",
+      "originalDownloadSha256": "70737a9c9d23531825eecb08156f8a57274acf82eb0dc3b712830917adfe3d10",
+      "generationId": "1b6534f4-d2af-4d5c-b686-ea2e8f9f180f",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 1211748,
+      "sourceTriangles": 18000,
+      "bytes": 1211748,
+      "triangles": 18000,
+      "textures": [
+        {
+          "name": "0-desk-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-desk-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-desk-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -5.025,
+          -2.36,
+          0
+        ],
+        "max": [
+          5.025,
+          1.42,
+          1.425
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": false,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0.04,
+        "roughness": 0.48,
+        "normalStrength": 0.28
+      }
+    },
+    {
+      "id": "archive",
+      "objectName": "Bookshelf",
+      "used": true,
+      "referenceSource": "art/office/tripo-archive.glb",
+      "sourceSha256": "98c17f5008f059da629f70eace5b22f28eaf3e415551505fd73a5b94dfd541d1",
+      "originalDownloadSha256": "bfaf352fcdca76556614e94479b98b80a163338354d1c505fdd42e58a8a9ba09",
+      "generationId": "f274f6c7-f099-4681-9274-8201ffce7248",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 1265356,
+      "sourceTriangles": 18000,
+      "bytes": 1265356,
+      "triangles": 18000,
+      "textures": [
+        {
+          "name": "0-archive-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-archive-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-archive-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -1,
+          -0.39,
+          0
+        ],
+        "max": [
+          1,
+          0.33,
+          4.7
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": false,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0.04,
+        "roughness": 0.56,
+        "normalStrength": 0.28
+      }
+    },
+    {
+      "id": "lamp",
+      "objectName": "BankersLamp",
+      "used": true,
+      "referenceSource": "art/office/tripo-lamp.glb",
+      "sourceSha256": "21a51a5005ef1b21b65d363b55addf33a02ee34955ee72279bccfa0eb8772ac6",
+      "originalDownloadSha256": "d67c7e5c7dac03980579846c0da495f46ce8bc215993cba0fbf2e366d9022de1",
+      "generationId": "d102506a-3f39-4913-8dd4-62912bc7f9c5",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 643984,
+      "sourceTriangles": 7999,
+      "bytes": 643984,
+      "triangles": 7999,
+      "textures": [
+        {
+          "name": "0-lamp-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-lamp-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-lamp-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -0.55,
+          -0.29,
+          0
+        ],
+        "max": [
+          0.55,
+          0.29,
+          1.25
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": false,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0.42,
+        "roughness": 0.32,
+        "normalStrength": 0.2
+      },
+      "blenderFinishing": "Original generated geometry retained; metal fittings refinished in brass and shade in dark green enamel. Mottled source texture removed from the scene.",
+      "sourceTexturesRetainedInScene": false
+    },
+    {
+      "id": "cactus",
+      "objectName": "Cactus",
+      "used": true,
+      "referenceSource": "art/office/tripo-cactus.glb",
+      "sourceSha256": "a2cedade131ef9c93639b98747a034e9889e4cbad1716e473b759bb6b82d970a",
+      "originalDownloadSha256": "f5d5706c053f813f1cd45f18a06541187763bb2dd99c45c82468740ccd83edce",
+      "generationId": "2672c1c2-3aaf-4c17-8203-f7e79067a2e2",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 1006828,
+      "sourceTriangles": 10000,
+      "bytes": 1006828,
+      "triangles": 10000,
+      "textures": [
+        {
+          "name": "0-cactus-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-cactus-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-cactus-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -0.52,
+          -0.52,
+          0
+        ],
+        "max": [
+          0.52,
+          0.52,
+          1.62
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": false,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0,
+        "roughness": 0.76,
+        "normalStrength": 0.35
+      }
+    },
+    {
+      "id": "laptop",
+      "objectName": "Laptop",
+      "used": true,
+      "referenceSource": "art/office/tripo-laptop.glb",
+      "sourceSha256": "ff871b6fe203062dde0e8ed959f3cc0ab7a10c1c846eb53917c1a3a3625595bd",
+      "originalDownloadSha256": "92836b8b298db0aeb043bcec33c67e916a09eb02ce2d4eacf9efcab0fd667184",
+      "generationId": "77639c65-f2d3-44ef-bf95-f436e1ccd0fe",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 1146544,
+      "sourceTriangles": 14000,
+      "bytes": 1146544,
+      "triangles": 14000,
+      "textures": [
+        {
+          "name": "0-laptop-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-laptop-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-laptop-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -3.815,
+          -2.04,
+          1.4125
+        ],
+        "max": [
+          1.015,
+          -0.16,
+          4.49
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": true,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0.32,
+        "roughness": 0.38,
+        "normalStrength": 0.13
+      },
+      "blenderFinishing": "Generated casing retained; continuous hinge fitting, recalculated normals, planar machined work deck, separate keycaps, trackpad and bevelled display trim authored in Blender."
+    },
+    {
+      "id": "phone",
+      "objectName": "Phone",
+      "used": true,
+      "referenceSource": "art/office/tripo-phone.glb",
+      "sourceSha256": "e249bbdaddff02f39bcdaca511c5684bef376b6f836d4aeaa6f5010dd324e3dc",
+      "originalDownloadSha256": "8369638e1bad89ed4cb00404d94668d0d695bb2ebc48f2f6382c90e3a1c87e06",
+      "generationId": "ba2b6a74-8b6f-4c45-92ee-1afea5778c65",
+      "model": "H3.1 – Best Quality",
+      "sourceBytes": 723116,
+      "sourceTriangles": 7999,
+      "bytes": 723116,
+      "triangles": 7999,
+      "textures": [
+        {
+          "name": "0-phone-basecolor",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "1-phone-normal",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "name": "2-phone-orm",
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "placementBounds": {
+        "min": [
+          -0.435,
+          -0.0575,
+          0
+        ],
+        "max": [
+          0.435,
+          0.0575,
+          1.72
+        ],
+        "space": "Blender parent-local Z-up"
+      },
+      "nativeScreenFinishing": true,
+      "normalsRecomputedAfterFitting": true,
+      "materialAdjustment": {
+        "metallic": 0.24,
+        "roughness": 0.35,
+        "normalStrength": 0.13
+      }
+    }
+  ],
   "coordinateSystem": "glTF Y-up; positions converted from Blender Z-up (x, y, z) to (x, z, -y)",
   "screen": {
     "width": 4.45,
@@ -59,6 +370,18 @@
       0
     ],
     "glTFBasisCorrection": "The empty uses the CSS local XY basis, facing +Z in glTF. Its Blender XY basis faces -Y. The export step removes Blender exporter empty-basis compensation."
+  },
+  "phoneScreen": {
+    "parent": "Phone",
+    "position": [
+      0,
+      0.86,
+      0.115
+    ],
+    "width": 0.72,
+    "height": 1.49,
+    "domWidth": 320,
+    "domHeight": 662.2222222222223
   },
   "camera": {
     "name": "Camera",
@@ -96,11 +419,15 @@
     "Bookshelf",
     "Mirror",
     "CityMap",
-    "Lawyer"
+    "Lawyer",
+    "Desk",
+    "BankersLamp",
+    "Cactus",
+    "TripoChair"
   ],
-  "triangles": 54684,
-  "meshObjects": 70,
-  "materials": 34,
+  "triangles": 116330,
+  "meshObjects": 60,
+  "materials": 42,
   "labelAnchors": {
     "Laptop": [
       -1.4,
@@ -132,6 +459,26 @@
       4.9,
       -3.5
     ],
+    "Desk": [
+      0,
+      1.35,
+      2.3
+    ],
+    "BankersLamp": [
+      -4.6,
+      2.75,
+      -0.33
+    ],
+    "Cactus": [
+      3.68,
+      3.1,
+      -0.63
+    ],
+    "TripoChair": [
+      1.93,
+      3.05,
+      -1.68
+    ],
     "Mirror": [
       -5.7,
       4.7,
@@ -148,17 +495,5 @@
       -3.9
     ]
   },
-  "glbBytes": 3747552,
-  "phoneScreen": {
-    "parent": "Phone",
-    "position": [
-      0,
-      0.86,
-      0.115
-    ],
-    "width": 0.72,
-    "height": 1.49,
-    "domWidth": 320,
-    "domHeight": 662.2222222222223
-  }
+  "glbBytes": 6997500
 }

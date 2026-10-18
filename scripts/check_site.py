@@ -58,7 +58,7 @@ assert struct.unpack_from('<I', model, 8)[0] == len(model)
 chunk_length = struct.unpack_from('<I', model, 12)[0]
 gltf = json.loads(model[20:20+chunk_length])
 objects = {node.get('name') for node in gltf['nodes']}
-for name in ('Laptop','ScreenAnchor','Phone','FolderCurrent','FolderArchive','FountainPen','Bookshelf','Mirror','CityMap','Lawyer'):
+for name in ('Laptop','ScreenAnchor','Phone','FolderCurrent','FolderArchive','FountainPen','Bookshelf','Mirror','CityMap','Lawyer','Desk','BankersLamp','Cactus','TripoChair'):
     assert name in objects, f'Missing interactive model: {name}'
 assert gltf.get('cameras') and len(model) < 10_000_000
 assert (root / 'assets/vendor/three/LICENSE').is_file()
@@ -73,3 +73,43 @@ provenance = json.loads(chair.with_suffix('.json').read_text())
 assert provenance['optimizedSHA256'] == hashlib.sha256(chair.read_bytes()).hexdigest()
 assert chair.stat().st_size < 8_000_000
 print('Tripo source provenance and optimized chair integrity: PASS')
+
+# All six requested replacements must be genuine, versioned Tripo source assets.
+expected = {'Desk','Laptop','BankersLamp','Bookshelf','Phone','Cactus'}
+assets = office.get('tripoAssets', [])
+assert {asset['objectName'] for asset in assets} == expected, 'Incomplete Tripo office replacement'
+assert len(assets) == len(expected), 'Duplicate office source entry'
+for asset in assets:
+    relative = Path(asset['referenceSource'])
+    assert not relative.is_absolute() and '..' not in relative.parts
+    source = root.parent / relative
+    assert source.is_file() and source.suffix == '.glb'
+    payload = source.read_bytes()
+    assert asset['sourceSha256'] == hashlib.sha256(payload).hexdigest()
+    assert asset['sourceBytes'] == len(payload)
+    assert len(payload) < 3_000_000, f'Object exceeds browser source budget: {source.name}'
+    provenance = json.loads(source.with_suffix('.json').read_text())
+    assert provenance['optimizedSHA256'] == asset['sourceSha256']
+    assert provenance['originalSHA256'] == asset['originalDownloadSha256']
+    assert provenance['generationId'] == asset['generationId'] and asset['generationId']
+    assert 'Tripo' in provenance['service']
+    length = struct.unpack_from('<I', payload, 12)[0]
+    obj = json.loads(payload[20:20+length])
+    assert obj.get('meshes') and obj.get('materials') and obj.get('images')
+    assert all('uri' not in item for item in obj.get('buffers', []) + obj.get('images', [])), 'A source GLB must embed its resources'
+    assert asset['objectName'] in office['labelAnchors']
+actual_triangles = sum(
+    gltf['accessors'][primitive['indices']]['count'] // 3
+    for node in gltf['nodes'] if 'mesh' in node
+    for primitive in gltf['meshes'][node['mesh']]['primitives']
+)
+assert office['triangles'] == actual_triangles, 'Manifest geometry count differs from exported GLB'
+assert actual_triangles <= 200_000, 'Office geometry exceeds mobile budget'
+assert all('uri' not in item for item in gltf.get('buffers', []) + gltf.get('images', []))
+assert office['glbBytes'] == len(model)
+assert office['screen']['anchor'] == 'ScreenAnchor'
+assert office['phoneScreen']['parent'] == 'Phone'
+for surface in ('screen','phoneScreen'):
+    assert office[surface]['width'] > 0 and office[surface]['height'] > 0
+    assert office[surface]['domWidth'] > 0 and office[surface]['domHeight'] > 0
+print('Six Tripo objects, embedded resources, provenance, screen contracts and mobile asset budget: PASS')

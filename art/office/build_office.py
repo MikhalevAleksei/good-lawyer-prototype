@@ -1,8 +1,9 @@
-"""Build the Good Lawyer office from native Blender geometry.
+"""Build the Good Lawyer office from versioned Blender and Tripo assets.
 
 Run with Blender 4.5: blender -b --python art/office/build_office.py
-The user's office sketch informs the composition. An optional optimized Tripo
-chair is identified by its source metadata; all other geometry is native Blender.
+The user's office sketch informs the composition. Optimized Tripo source GLBs
+are checked against their provenance records and normalized into authored slots.
+The room, folders, fountain pen and live-screen surfaces are native Blender.
 ScreenAnchor is deliberately unparented, has unit scale and local XY axes.
 """
 from pathlib import Path
@@ -12,7 +13,7 @@ import random
 import json
 import struct
 import hashlib
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'source' / 'models'
@@ -237,7 +238,7 @@ box('Mirror brass inner frame',(0,-.075,0),(1.25,.055,2.32),brass,.045,mirror)
 box('Mirror bevelled glass',(0,-.111,0),(1.16,.025,2.23),mirror_glass,.06,mirror)
 
 # Walnut desk: raised top, rounded front edge, slab legs, panels and drawers.
-desk=empty('WritingDesk')
+desk=empty('Desk')
 box('Desk slab',(0,-.47,1.31),(10.05,3.78,.19),wood,.065,desk)
 for i in range(6):
     box('Desk walnut grain plank',(0,-2.0+i*.61,1.413),(9.92,.6,.018),[wood_medium,wood,wood_light,wood_medium][i%4],.006,desk)
@@ -249,9 +250,10 @@ for x in [-4.08,4.08]:
         box('Drawer brass handle',(x,-1.71,z),( .38,.04,.035),brass,.015,desk)
     for yy in [-1.45,.83]:box('Pedestal foot',(x,yy,.1),(1.03,.18,.2),wood,.02,desk)
 box('Desk modesty panel',(0,.96,.68),(7.2,.11,1.05),wood_medium,.025,desk)
-box('Leather desk pad',(1.92,-.9,1.443),(3.18,2.31,.035),leather,.08,desk)
-for x in [.37,3.47]:line('Deskpad stitched side',[(x,-2.01,1.465),(x,.2,1.465)],.006,leather_light,desk)
-for y in [-2.01,.2]:line('Deskpad stitched end',[(.37,y,1.465),(3.47,y,1.465)],.006,leather_light,desk)
+desk_accessories=empty('DeskAccessories')
+box('Leather desk pad',(1.92,-.9,1.443),(3.18,2.31,.035),leather,.08,desk_accessories)
+for x in [.37,3.47]:line('Deskpad stitched side',[(x,-2.01,1.465),(x,.2,1.465)],.006,leather_light,desk_accessories)
+for y in [-2.01,.2]:line('Deskpad stitched end',[(.37,y,1.465),(3.47,y,1.465)],.006,leather_light,desk_accessories)
 
 # Oversized laptop is intentionally the principal interaction surface.
 SW=4.45
@@ -308,7 +310,7 @@ cylinder('Pen cap gold band',(.127,-.18,.018),.055,.047,gold,pen,20,(0,math.pi/2
 box('Pen cap gold clip',(-.16,-.18,.071),(.34,.017,.012),gold,.008,pen)
 
 # Banker's lamp and cards sit behind the screen, without obstructing the UI.
-lamp=empty('BankersLamp',(-4.32,.33,1.45))
+lamp=empty('BankersLamp',(-4.6,.33,1.45))
 cylinder('Lamp heavy brass foot',(0,0,.035),.33,.07,brass,lamp,32)
 cylinder('Lamp upright',(0,.05,.53),.036,.94,brass,lamp,16)
 beam('Lamp curved shoulder',(-.18,.05,.98),(.18,.05,.98),.033,brass,lamp)
@@ -440,7 +442,7 @@ if tripo_path.exists():
         tripo_info={
             'used':True,
             'source':'Tripo Studio generation through the native UI',
-            'model':tripo_metadata.get('model','H3.1 Best Quality'),
+            'model':tripo_metadata.get('model',tripo_metadata.get('actualModel','H3.1 Best Quality')),
             'generationId':tripo_metadata.get('generationId'),
             'referenceSource':'art/office/tripo-chair.glb',
             'sourceSha256':actual_source_sha,
@@ -498,7 +500,7 @@ for x,z in [(-.74,-.31),(-.52,.4),(.5,-.39),(.83,.4),(.47,.18)]:
 text('Map city title','NOVORECHENSK',(0,-.14,.748),.075,wood,citymap)
 
 # Plant and personal desk objects add scale and lived-in character.
-plant=empty('OfficePlant',(3.68,.63,1.43))
+plant=empty('Cactus',(3.68,.63,1.43))
 bpy.ops.mesh.primitive_cone_add(vertices=24,radius1=.25,radius2=.34,depth=.48,location=(0,0,.24))
 finish(bpy.context.object,'Plant glazed ceramic pot',terracotta,plant);bevel(bpy.context.object,.025)
 cylinder('Plant soil',(0,0,.472),.3,.026,soil,plant,24)
@@ -516,6 +518,146 @@ text('Business card monogram','A / A',(0,-.02,.185),.095,wood,cards,rot=(0,0,0))
 for i in range(2):
     box('Desk reference volume',(-3.93,.92,1.5+i*.15),(.93,.7,.14),[burgundy,blue_book][i],.018)
     box('Desk reference pages',(-3.93,.56,1.5+i*.15),(.82,.018,.1),paper_shadow,.004)
+
+# Generated furniture is stored as small, self-contained, versioned GLBs. The
+# source object's transforms are baked into vertices before slot normalization,
+# so the established UI roots retain their exact transforms and unit scale.
+tripo_assets=[]
+def replace_with_tripo(key, root, target_min, target_max, keep_names=(),
+                       metallic=.04, roughness=.58, normal=.28, rotation_z=0):
+    path=ROOT/'art'/'office'/('tripo-'+key+'.glb')
+    if not path.exists():
+        print('TRIPO_ASSET_NATIVE_FALLBACK',key,flush=True)
+        return
+    metadata_path=path.with_suffix('.json')
+    if not metadata_path.exists():raise RuntimeError('Missing Tripo provenance: '+str(metadata_path))
+    metadata=json.loads(metadata_path.read_text(encoding='utf-8'))
+    actual_sha=hashlib.sha256(path.read_bytes()).hexdigest()
+    if not metadata.get('optimizedSHA256') or metadata['optimizedSHA256']!=actual_sha:
+        raise RuntimeError('Optimized Tripo '+key+' SHA256 does not match its provenance record')
+    native_children=list(root.children_recursive)
+    before=set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(path))
+    imported=set(bpy.data.objects)-before
+    meshes=[obj for obj in imported if obj.type=='MESH' and obj.data.vertices]
+    if not meshes:raise RuntimeError('No mesh in Tripo '+key)
+    bpy.context.view_layer.update()
+    orientation=Matrix.Rotation(math.radians(rotation_z),4,'Z')
+    source_points={obj:[orientation@obj.matrix_world@v.co for v in obj.data.vertices] for obj in meshes}
+    all_points=[co for points in source_points.values() for co in points]
+    minimum=Vector(tuple(min(co[i] for co in all_points) for i in range(3)))
+    maximum=Vector(tuple(max(co[i] for co in all_points) for i in range(3)))
+    extent=maximum-minimum
+    if min(extent)<.00001:raise RuntimeError('Degenerate Tripo bounds: '+key)
+    lower,upper=Vector(target_min),Vector(target_max)
+    dimensions=upper-lower
+    images=set()
+    for index,obj in enumerate(meshes):
+        obj.data=obj.data.copy()
+        for vertex,co in zip(obj.data.vertices,source_points[obj]):
+            unit=Vector(tuple((co[i]-minimum[i])/extent[i] for i in range(3)))
+            mapped=Vector(tuple(lower[i]+unit[i]*dimensions[i] for i in range(3)))
+            if key=='laptop':
+                # Fit the base and upright lid continuously through the hinge.
+                # The generated casing stays behind the precise CSS3D plane.
+                seam=.115
+                mapped.z=(lower.z+unit.z/seam*(1.57-lower.z) if unit.z<=seam
+                          else 1.57+(unit.z-seam)/(1-seam)*(upper.z-1.57))
+                hinge_blend=max(0,min(1,(unit.z-seam)/.035))
+                mapped.y=mapped.y*(1-hinge_blend)+(-.32+unit.y*.16)*hinge_blend
+            vertex.co=mapped
+        # Imported split normals describe the original shape. Recompute them
+        # after axis fitting and the laptop's non-linear hinge correction.
+        if obj.data.has_custom_normals:
+            obj.data.normals_split_custom_set([(0.0,0.0,0.0)]*len(obj.data.loops))
+        obj.data.update()
+        obj.parent=root
+        obj.matrix_parent_inverse=Matrix.Identity(4)
+        obj.matrix_basis=Matrix.Identity(4)
+        obj.name='Tripo '+key+' geometry '+str(index+1)
+        obj['sourceAsset']='art/office/'+path.name
+        for mat in obj.data.materials:
+            if not mat:continue
+            if not mat.name.startswith('Tripo '+key+' / '):mat.name='Tripo '+key+' / '+mat.name
+            if not mat.use_nodes:continue
+            for shader_node in mat.node_tree.nodes:
+                if shader_node.type=='BSDF_PRINCIPLED':
+                    for socket_name,value in [('Metallic',metallic),('Roughness',roughness)]:
+                        socket=shader_node.inputs[socket_name]
+                        for link in list(socket.links):mat.node_tree.links.remove(link)
+                        socket.default_value=value
+                elif shader_node.type=='NORMAL_MAP':shader_node.inputs['Strength'].default_value=normal
+                elif shader_node.type=='TEX_IMAGE' and shader_node.image:images.add(shader_node.image)
+        if key=='lamp':
+            # Refinish the genuine Tripo lamp mesh: its source texture had a
+            # purple stem and blue patches on the shade. Use restrained enamel
+            # and brass without changing the generated silhouette or fittings.
+            lamp_brass=brass.copy();lamp_brass.name='Tripo lamp / Restored brass fittings'
+            lamp_enamel=material('Tripo lamp / Dark green enamel',(.024,.095,.047),.23,.08)
+            obj.data.materials.append(lamp_brass)
+            brass_index=len(obj.data.materials)-1
+            obj.data.materials.append(lamp_enamel)
+            enamel_index=len(obj.data.materials)-1
+            for face in obj.data.polygons:
+                face.material_index=brass_index if face.center.z<.9 else enamel_index
+        obj.data.calc_loop_triangles()
+    for img in images:img.pack()
+    for obj in list(imported):
+        if obj not in meshes:bpy.data.objects.remove(obj,do_unlink=True)
+    for obj in native_children:
+        if obj.name not in keep_names:bpy.data.objects.remove(obj,do_unlink=True)
+    root['sourceAsset']='art/office/'+path.name
+    root['generator']='Tripo Studio / '+metadata.get('model',metadata.get('actualModel','H3.1 Best Quality'))
+    report={
+        'id':key,'objectName':root.name,'used':True,
+        'referenceSource':'art/office/'+path.name,
+        'sourceSha256':actual_sha,
+        'originalDownloadSha256':metadata.get('originalSHA256'),
+        'generationId':metadata.get('generationId'),
+        'model':metadata.get('model',metadata.get('actualModel','H3.1 Best Quality')),
+        'sourceBytes':path.stat().st_size,
+        'sourceTriangles':sum(len(obj.data.loop_triangles) for obj in meshes),
+        'bytes':path.stat().st_size,
+        'triangles':sum(len(obj.data.loop_triangles) for obj in meshes),
+        'textures':[{'name':img.name,'width':img.size[0],'height':img.size[1]} for img in sorted(images,key=lambda item:item.name)],
+        'placementBounds':{'min':list(target_min),'max':list(target_max),'space':'Blender parent-local Z-up'},
+        'nativeScreenFinishing':key in {'laptop','phone'},
+        'normalsRecomputedAfterFitting':True,
+        'materialAdjustment':{'metallic':metallic,'roughness':roughness,'normalStrength':normal}
+    }
+    tripo_assets.append(report)
+    print('TRIPO_ASSET_IMPORTED',json.dumps(report),flush=True)
+
+replace_with_tripo('desk',desk,(-5.025,-2.36,0),(5.025,1.42,1.425),roughness=.48)
+replace_with_tripo('archive',shelf,(-1,-.39,0),(1,.33,4.7),roughness=.56)
+replace_with_tripo('lamp',lamp,(-.55,-.29,0),(.55,.29,1.25),metallic=.42,roughness=.32,normal=.20)
+for asset in tripo_assets:
+    if asset['id']=='lamp':
+        asset['blenderFinishing']='Original generated geometry retained; metal fittings refinished in brass and shade in dark green enamel. Mottled source texture removed from the scene.'
+        asset['sourceTexturesRetainedInScene']=False
+replace_with_tripo('cactus',plant,(-.52,-.52,0),(.52,.52,1.62),metallic=0,roughness=.76,normal=.35)
+laptop_finished_names=tuple(obj.name for obj in laptop.children_recursive
+    if obj.name.startswith('Laptop individual key') or obj.name in {
+        'Laptop screen black bezel','Laptop screen glass','Laptop camera lens',
+        'Laptop keyboard inset','Laptop space key','Laptop trackpad','Laptop trackpad outline'})
+replace_with_tripo('laptop',laptop,(-3.815,-2.04,1.4125),(1.015,-.16,4.49),
+    keep_names=laptop_finished_names,metallic=.32,roughness=.38,normal=.13)
+if any(asset['id']=='laptop' for asset in tripo_assets):
+    # Manual hard-surface finishing over the genuine generated casing. The
+    # source shell remains the base/back/hinge; these pieces remove generated
+    # dents from the work deck and keep individual keys readable at camera focus.
+    box('Laptop finished work deck',(SX,-1.14,1.552),(4.70,1.73,.043),aluminium,.035,laptop)
+    for side in [-1,1]:
+        box('Laptop finished display side trim',(SX+side*2.3825,SY-.034,2.99),
+            (.115,.052,3.04),aluminium,.022,laptop)
+    box('Laptop finished display top trim',(SX,SY-.034,4.49),(4.88,.052,.105),aluminium,.025,laptop)
+    box('Laptop finished display bottom trim',(SX,SY-.034,1.515),(4.88,.052,.1),aluminium,.025,laptop)
+    for asset in tripo_assets:
+        if asset['id']=='laptop':
+            asset['blenderFinishing']='Generated casing retained; continuous hinge fitting, recalculated normals, planar machined work deck, separate keycaps, trackpad and bevelled display trim authored in Blender.'
+replace_with_tripo('phone',phone,(-.435,-.0575,0),(.435,.0575,1.72),
+    keep_names=tuple(obj.name for obj in phone.children_recursive if obj.name not in {'Phone metal chassis','Phone volume key','Phone volume key.001'}),
+    metallic=.24,roughness=.35,normal=.13)
 
 # Camera: modest perspective, screen nearly half the frame width at 1440 x 850.
 CAM_POS=(1.18,-11.85,6.03)
@@ -558,8 +700,8 @@ scene.render.filepath=str(OUT/'office-preview.png')
 
 # Merge by interactive ancestor and material: preserve named hit targets while
 # reducing hundreds of tiny book, key and joinery objects to a compact draw list.
-interactive=['Laptop','ScreenAnchor','Phone','FolderCurrent','FolderArchive','FountainPen','Bookshelf','Mirror','CityMap','Lawyer']
-protected_roots=interactive+['TripoChair']
+interactive=['Laptop','ScreenAnchor','Phone','FolderCurrent','FolderArchive','FountainPen','Bookshelf','Mirror','CityMap','Lawyer','Desk','BankersLamp','Cactus','TripoChair']
+protected_roots=interactive
 bpy.context.view_layer.update()
 batches={}
 for obj in list(scene.objects):
@@ -589,9 +731,10 @@ triangles=sum(len(o.data.loop_triangles) for o in scene.objects if o.type=='MESH
 to_gltf=lambda xyz:[xyz[0],xyz[2],-xyz[1]]
 manifest={
     'generator':'Blender 4.5.14',
-    'source':'Native procedural Blender office geometry; user office sketch reference; existing project portrait texture.'+(' Chair generated in Tripo Studio and optimized in Blender.' if tripo_info['used'] else ''),
+    'source':'Authored Blender room, folders, fountain pen and interaction surfaces; user office sketch reference; existing project portrait texture. Versioned Tripo Studio assets are optimized and fitted in Blender; see tripo and tripoAssets for actual import provenance.',
     'tripoUsed':tripo_info['used'],
     'tripo':tripo_info,
+    'tripoAssets':tripo_assets,
     'coordinateSystem':'glTF Y-up; positions converted from Blender Z-up (x, y, z) to (x, z, -y)',
     'screen':{'width':SW,'height':SH,'anchor':'ScreenAnchor','localPlane':'XY','domWidth':900,'domHeight':560,'scale':[1,1,1],'unparented':True,'blenderRotation':[math.pi/2,0,0],'glTFBasisCorrection':'The empty uses the CSS local XY basis, facing +Z in glTF. Its Blender XY basis faces -Y. The export step removes Blender exporter empty-basis compensation.'},
     'phoneScreen':{'parent': 'Phone', 'position': [0, 0.86, 0.115], 'width': 0.72, 'height': 1.49, 'domWidth': 320, 'domHeight': 662.2222222222223},
@@ -604,6 +747,8 @@ manifest={
         'Laptop':to_gltf((SX,SY,4.48)), 'Phone':to_gltf((3.78,-1.5,3.28)),
         'FolderCurrent':to_gltf((1.75,-1.1,1.9)), 'FolderArchive':to_gltf((2.5,-.26,1.9)),
         'FountainPen':to_gltf((1.95,-1.96,1.75)), 'Bookshelf':to_gltf((-4.98,3.5,4.9)),
+        'Desk':to_gltf((0,-2.3,1.35)), 'BankersLamp':to_gltf((-4.6,.33,2.75)),
+        'Cactus':to_gltf((3.68,.63,3.1)), 'TripoChair':to_gltf((1.93,1.68,3.05)),
         'Mirror':to_gltf((-5.7,2.2,4.7)), 'CityMap':to_gltf((4.4,3.5,4.9)), 'Lawyer':to_gltf((1.99,3.9,4.56))
     }
 }

@@ -1,0 +1,96 @@
+{
+  "service": "Tripo Studio",
+  "actualModel": "H3.1 – Best Quality",
+  "generationId": "1b6534f4-d2af-4d5c-b686-ea2e8f9f180f",
+  "createdDate": "2026-10-18",
+  "prompt": "A single wide classic lawyer's writing desk made of warm medium-brown walnut wood, elegant restrained European office furniture. Overall proportions 160 cm wide, 80 cm deep, 75 cm high. A large perfectly flat clean rectangular wooden tabletop with subtly beveled edges, completely empty, no objects on top. Two solid drawer pedestals with small antique brass handles, generous open central knee space for a chair. Realistic wood grain, precise joinery, subtle polished finish, modest carved details. Freestanding desk only, complete geometry on all sides, no chair, no computer, no papers, no lamp, no room, no floor platform, no text, no logo. PBR materials, suitable for a warm bright office.",
+  "generationCredits": 55,
+  "exportAdditionalCredits": 0,
+  "originalFormat": "GLB 2.0",
+  "originalTextureResolution": "4K",
+  "originalSHA256": "70737a9c9d23531825eecb08156f8a57274acf82eb0dc3b712830917adfe3d10",
+  "originalBytes": 63356140,
+  "originalTriangles": 1878952,
+  "originalVertices": 977588,
+  "embeddedImages": 3,
+  "originalMeshBounds": {
+    "min": [
+      -0.4907990097999573,
+      0.0,
+      -0.2832031548023224
+    ],
+    "max": [
+      0.4907990097999573,
+      0.5140381455421448,
+      0.2832031548023224
+    ],
+    "size": [
+      0.9815980195999146,
+      0.5140381455421448,
+      0.5664063096046448
+    ],
+    "note": "Mesh accessor coordinates before scene node transforms"
+  },
+  "optimizedSHA256": "55e5748addbf4058a23164c48d20962f9093729ec30211acb260829ef37bbce3",
+  "provenance": "Generated from the accompanying text prompt in Tripo Studio using the user-authorized existing credit balance, then downloaded through the native Chrome export UI. No purchase or top-up.",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-desk.glb",
+  "asset": "desk",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T12:24:34.416349+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 63356140,
+    "inputTriangles": 1878952,
+    "targetTriangles": 18000,
+    "outputTriangles": 18000,
+    "outputBytes": 1211748,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  },
+  "sceneFinishing": {
+    "tool": "Blender 4.5.14 LTS",
+    "builder": "art/office/build_office.py",
+    "description": "Normalized to the original wide desk slot; flat tabletop height preserved; normals recalculated after fitting.",
+    "canonicalGeneratedInputPreserved": true
+  }
+}

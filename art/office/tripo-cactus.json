@@ -1,0 +1,96 @@
+{
+  "service": "Tripo Studio",
+  "actualModel": "H3.1 – Best Quality",
+  "generationId": "2672c1c2-3aaf-4c17-8203-f7e79067a2e2",
+  "createdDate": "2026-10-18",
+  "prompt": "A single small realistic green cactus in a compact warm terracotta ceramic flower pot, a tasteful decoration for a bright lawyer's office desk. One upright rounded ribbed column cactus with two small side branches, natural deep green skin and subtle short pale spines. Simple tapered cylindrical matte terracotta pot with a thick rounded rim, visible dark potting soil and a few tiny natural pebbles. Entire plant and pot, stable proportions, organic but clean shape, about 25 cm total height, rich restrained realistic PBR materials. Isolated object only, no table, no shelf, no room, no floor platform, no decorative lettering, no human, no text, no logo. No extra plants.",
+  "generationCredits": 55,
+  "exportAdditionalCredits": 0,
+  "originalFormat": "GLB 2.0",
+  "originalTextureResolution": "4K",
+  "originalSHA256": "f5d5706c053f813f1cd45f18a06541187763bb2dd99c45c82468740ccd83edce",
+  "originalBytes": 64820356,
+  "originalTriangles": 1962059,
+  "originalVertices": 1043275,
+  "embeddedImages": 3,
+  "originalMeshBounds": {
+    "min": [
+      -0.306549072265625,
+      0.0,
+      -0.304229736328125
+    ],
+    "max": [
+      0.306549072265625,
+      0.979583740234375,
+      0.304229736328125
+    ],
+    "size": [
+      0.61309814453125,
+      0.979583740234375,
+      0.60845947265625
+    ],
+    "note": "Mesh accessor coordinates before scene node transforms"
+  },
+  "optimizedSHA256": "a2cedade131ef9c93639b98747a034e9889e4cbad1716e473b759bb6b82d970a",
+  "provenance": "Generated from the accompanying text prompt in Tripo Studio using the user-authorized existing credit balance, then downloaded through the native Chrome export UI. No purchase or top-up.",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-cactus.glb",
+  "asset": "cactus",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T12:42:12.424308+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 64820356,
+    "inputTriangles": 1962059,
+    "targetTriangles": 10000,
+    "outputTriangles": 10000,
+    "outputBytes": 1006828,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  },
+  "sceneFinishing": {
+    "tool": "Blender 4.5.14 LTS",
+    "builder": "art/office/build_office.py",
+    "description": "Generated cactus, two branches and terracotta pot retained, normalized into the previous plant slot; normals recalculated.",
+    "canonicalGeneratedInputPreserved": true
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "service": "Tripo Studio",
+  "actualModel": "H3.1 – Best Quality",
+  "generationId": "77639c65-f2d3-44ef-bf95-f436e1ccd0fe",
+  "createdDate": "2026-10-18",
+  "prompt": "A single realistic open modern laptop computer for a lawyer's desk. Neutral dark graphite metal casing, horizontal keyboard base, laptop lid opened exactly 90 degrees so the screen is upright and vertical. A large perfectly flat rectangular display with width to height ratio 900:560, thin straight black bezel. Screen is uniformly blank matte black, no image, no interface, no writing, no reflection graphic. Clean rectangular keyboard base with individual low relief black keys without symbols, a centered trackpad, simple hinge. Clear separation between lid, screen and keyboard base. Complete standalone laptop only, no cables, no desk, no hands, no room, no accessories, no logo, no text. Refined realistic PBR materials.",
+  "generationCredits": 55,
+  "exportAdditionalCredits": 0,
+  "originalFormat": "GLB 2.0",
+  "originalTextureResolution": "4K",
+  "originalSHA256": "92836b8b298db0aeb043bcec33c67e916a09eb02ce2d4eacf9efcab0fd667184",
+  "originalBytes": 63146040,
+  "originalTriangles": 1932672,
+  "originalVertices": 1010636,
+  "embeddedImages": 3,
+  "originalMeshBounds": {
+    "min": [
+      -0.4925079345703125,
+      0.0,
+      -0.4715271592140198
+    ],
+    "max": [
+      0.4925079345703125,
+      0.805511474609375,
+      0.4715271592140198
+    ],
+    "size": [
+      0.985015869140625,
+      0.805511474609375,
+      0.9430543184280396
+    ],
+    "note": "Mesh accessor coordinates before scene node transforms"
+  },
+  "optimizedSHA256": "ff871b6fe203062dde0e8ed959f3cc0ab7a10c1c846eb53917c1a3a3625595bd",
+  "provenance": "Generated from the accompanying text prompt in Tripo Studio using the user-authorized existing credit balance, then downloaded through the native Chrome export UI. No purchase or top-up.",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-laptop.glb",
+  "asset": "laptop",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T12:28:54.634174+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 63146040,
+    "inputTriangles": 1932672,
+    "targetTriangles": 14000,
+    "outputTriangles": 14000,
+    "outputBytes": 1146544,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  },
+  "sceneFinishing": {
+    "tool": "Blender 4.5.14 LTS",
+    "builder": "art/office/build_office.py",
+    "description": "Generated casing, back and hinge region retained. A continuous height transition fits the open lid behind the exact live screen. Blender-authored planar work deck, separate keycaps, trackpad and bevelled display trim cover dents in the generated hard surfaces. Normals recalculated.",
+    "canonicalGeneratedInputPreserved": true
+  }
+}

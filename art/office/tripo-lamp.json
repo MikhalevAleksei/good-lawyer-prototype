@@ -1,0 +1,96 @@
+{
+  "service": "Tripo Studio",
+  "actualModel": "H3.1 – Best Quality",
+  "generationId": "d102506a-3f39-4913-8dd4-62912bc7f9c5",
+  "createdDate": "2026-10-18",
+  "prompt": "A single classic banker's desk lamp for a refined lawyer's office. A broad elongated emerald green glass lampshade, glossy dark green curved outer shell and pale cream inner surface, supported at both ends by polished antique brass arms. Elegant curved brass stem and a sturdy oval brass pedestal base. Small hanging pull chain, believable lamp construction, restrained traditional library style, warm brass and rich emerald palette. Entire lamp from base to shade, realistic proportions, clean smooth surfaces and PBR materials. Isolated lamp only, no desk, no room, no objects around it, no floor platform, no human, no text, no logo.",
+  "generationCredits": 55,
+  "exportAdditionalCredits": 0,
+  "originalFormat": "GLB 2.0",
+  "originalTextureResolution": "4K",
+  "originalSHA256": "d67c7e5c7dac03980579846c0da495f46ce8bc215993cba0fbf2e366d9022de1",
+  "originalBytes": 59268836,
+  "originalTriangles": 1937086,
+  "originalVertices": 998961,
+  "embeddedImages": 3,
+  "originalMeshBounds": {
+    "min": [
+      -0.41668701171875,
+      0.0,
+      -0.2794189453125
+    ],
+    "max": [
+      0.41668701171875,
+      0.9803466796875,
+      0.2794189453125
+    ],
+    "size": [
+      0.8333740234375,
+      0.9803466796875,
+      0.558837890625
+    ],
+    "note": "Mesh accessor coordinates before scene node transforms"
+  },
+  "optimizedSHA256": "21a51a5005ef1b21b65d363b55addf33a02ee34955ee72279bccfa0eb8772ac6",
+  "provenance": "Generated from the accompanying text prompt in Tripo Studio using the user-authorized existing credit balance, then downloaded through the native Chrome export UI. No purchase or top-up.",
+  "optimizationStatus": "Complete; optimized GLB is the versioned source asset",
+  "originalRetainedInTemporaryStorage": true,
+  "sourceAsset": "art/office/tripo-lamp.glb",
+  "asset": "lamp",
+  "optimization": {
+    "tool": "Blender 4.5.14 LTS",
+    "completedAt": "2026-10-18T12:35:23.609209+00:00",
+    "algorithm": "Collapse decimation with triangulation; embedded PBR textures resized by material role",
+    "inputBytes": 59268836,
+    "inputTriangles": 1937086,
+    "targetTriangles": 8000,
+    "outputTriangles": 7999,
+    "outputBytes": 643984,
+    "textures": [
+      {
+        "role": "basecolor",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "JPEG"
+      },
+      {
+        "role": "normal",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      },
+      {
+        "role": "orm",
+        "originalSize": [
+          4096,
+          4096
+        ],
+        "size": [
+          512,
+          512
+        ],
+        "encoding": "PNG"
+      }
+    ],
+    "selfContained": true,
+    "rebuildInput": "Only the optimized GLB is required by build_office.py; the original download is not part of the release"
+  },
+  "sceneFinishing": {
+    "tool": "Blender 4.5.14 LTS",
+    "builder": "art/office/build_office.py",
+    "description": "Generated geometry retained. Purple stem and foot refinished with brass; mottled blue-green shade replaced with a calm dark green enamel material. Shifted left to x=-4.6 for visibility.",
+    "canonicalGeneratedInputPreserved": true
+  }
+}
