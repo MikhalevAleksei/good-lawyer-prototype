@@ -148,5 +148,17 @@
       -3.9
     ]
   },
-  "glbBytes": 3747552
+  "glbBytes": 3747552,
+  "phoneScreen": {
+    "parent": "Phone",
+    "position": [
+      0,
+      0.86,
+      0.115
+    ],
+    "width": 0.72,
+    "height": 1.49,
+    "domWidth": 320,
+    "domHeight": 662.2222222222223
+  }
 }

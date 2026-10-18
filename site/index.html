@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#183c2d"><meta name="description" content="Хороший адвокат: стратегический триллер. Трёхмерный кабинет, десять глав и ваша линия защиты."><title>Хороший адвокат — Северный берег</title></head><body>
 <link rel="stylesheet" href="assets/game.css?v=b9d091f2a05c">
-<link rel="stylesheet" href="assets/office.css?v=e69ac2d76f18">
+<link rel="stylesheet" href="assets/office.css?v=b1fc8548d198">
 <div id="good-lawyer" lang="ru" data-device="laptop">
   <section id="menu" class="main-menu" aria-labelledby="menu-title">
     <div class="menu-copy">
@@ -25,6 +25,7 @@
 
     <section id="office-room" class="office-room" aria-label="Трёхмерный кабинет адвоката" hidden>
       <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 ₽</strong></div></div></header>
+      <nav id="room-focus-bar" class="room-focus-bar" aria-label="Работа с устройством" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-action="room">← Общий вид</button></div></nav>
       <div id="room-viewport" class="room-viewport">
         <img class="room-preview" src="assets/models/office-preview.png?v=0bcb343022b9" alt="Кабинет адвоката: ноутбук на столе, архив слева, кресло и карта справа, две папки и перьевая ручка">
         <div id="room-webgl" class="room-webgl"></div><div id="room-css3d" class="room-css3d"></div>
@@ -32,7 +33,8 @@
         <div id="room-object-labels" class="room-object-labels"></div>
         <div class="room-camera" aria-label="Осмотр кабинета"><button data-room-camera="left" aria-label="Осмотреть кабинет слева">↶</button><button data-room-camera="reset">Общий вид</button><button data-room-camera="right" aria-label="Осмотреть кабинет справа">↷</button></div>
         <p id="room-hint" class="room-hint">Выберите предмет, чтобы начать работу</p>
-        <div id="room-screen" class="room-screen" aria-label="Рабочий стол ноутбука"></div>
+        <div id="room-screen" class="room-screen" aria-label="Рабочий стол ноутбука"><div id="room-laptop-home"></div><div id="room-laptop-workspace" hidden></div></div>
+        <div id="room-phone-screen" class="room-phone-screen" aria-label="Экран телефона"><button class="phone-wake" data-room-view="phone"><span>09:41</span><strong>Личная линия</strong><small>Коснитесь, чтобы открыть</small></button><div id="room-phone-workspace" hidden></div></div>
       </div>
       <nav id="room-mobile-programs" class="room-mobile-programs" aria-label="Программы ноутбука"></nav>
       <nav id="room-shortcuts" class="room-shortcuts" aria-label="Предметы кабинета"></nav>
@@ -46,7 +48,7 @@
         <div class="laptop">
           <header class="brandbar"><div class="brand"><span class="seal" aria-hidden="true">ХА</span><div><strong>ХОРОШИЙ АДВОКАТ</strong><small id="lawyer-name">Частная практика</small></div></div><div class="date"><span id="district-label">Пригород</span><b id="day-label">День 1</b></div></header>
           <div class="metrics"><div><span>ИЗВЕСТНОСТЬ</span><b id="rep">8</b><small>/ 100</small><i><em id="rep-bar"></em></i></div><div><span>ПРОФЕССИОНАЛИЗМ</span><b id="professional">5</b><small>/ 100</small><i><em id="professional-bar"></em></i></div><div class="danger-metric"><span>ВНИМАНИЕ СЛЕДСТВИЯ</span><b id="heat">0</b><small>/ 100</small><i><em id="heat-bar"></em></i></div></div>
-          <nav class="desk-nav" aria-label="Программы ноутбука"><button data-desk="cases" aria-pressed="true">Дела</button><button data-desk="dossier">Досье</button><button data-desk="witness">Свидетель</button><button data-desk="plan">План защиты</button><button data-desk="career">Карьера</button><button data-desk="news">Новости</button><button data-desk="mail">Почта <span id="mail-badge" class="badge">1</span></button></nav>
+          <nav class="desk-nav" aria-label="Программы ноутбука"><select id="desk-app-select" aria-label="Открыть программу"><option value="" disabled selected>Программы</option><option value="cases">Дела</option><option value="dossier">Досье</option><option value="witness">Свидетель</option><option value="evidence">Улики</option><option value="actions">Поручения</option><option value="notes">Блокнот</option><option value="plan">План защиты</option><option value="mail">Почта</option><option value="news">Новости</option><option value="archive">Архив</option><option value="career">Карьера</option><option value="city">Карта города</option><option value="wardrobe">Гардероб</option><option value="settings">Настройки</option><option value="shop">Магазин</option></select><button data-desk="cases" aria-pressed="true">Дела</button><button data-desk="dossier">Досье</button><button data-desk="witness">Свидетель</button><button data-desk="plan">План защиты</button><button data-desk="career">Карьера</button><button data-desk="news">Новости</button><button data-desk="mail">Почта <span id="mail-badge" class="badge">1</span></button></nav>
           <div id="case-strip" class="case-strip" hidden></div>
           <div id="desktop-content" class="desktop-content"></div>
           <div id="investigation" class="investigation" hidden></div>
@@ -63,10 +65,10 @@
   <div id="overlay" class="overlay" hidden></div>
 </div>
 <script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.min.js"}}</script>
-<script type="module" src="assets/office.mjs?v=99b086b7c1d1"></script>
+<script type="module" src="assets/office.mjs?v=f4c54d7646db"></script>
 <script src="assets/game-webmcp.js?v=963f9c9b4b1c"></script>
 <script src="assets/cases.js?v=cbef231be67b"></script>
 <script src="assets/engine.js?v=eeec93912e02"></script>
-<script src="assets/game.js?v=97102f4ce5fa" data-portrait="assets/lawyer-portrait.jpg" data-video="assets/court.mp4"></script>
+<script src="assets/game.js?v=ee6e71dec23f" data-portrait="assets/lawyer-portrait.jpg" data-video="assets/court.mp4"></script>
 
 </body></html>

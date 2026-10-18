@@ -594,6 +594,7 @@ manifest={
     'tripo':tripo_info,
     'coordinateSystem':'glTF Y-up; positions converted from Blender Z-up (x, y, z) to (x, z, -y)',
     'screen':{'width':SW,'height':SH,'anchor':'ScreenAnchor','localPlane':'XY','domWidth':900,'domHeight':560,'scale':[1,1,1],'unparented':True,'blenderRotation':[math.pi/2,0,0],'glTFBasisCorrection':'The empty uses the CSS local XY basis, facing +Z in glTF. Its Blender XY basis faces -Y. The export step removes Blender exporter empty-basis compensation.'},
+    'phoneScreen':{'parent': 'Phone', 'position': [0, 0.86, 0.115], 'width': 0.72, 'height': 1.49, 'domWidth': 320, 'domHeight': 662.2222222222223},
     'camera':{'name':'Camera','position':to_gltf(CAM_POS),'target':to_gltf(CAM_TARGET),'fov':math.degrees(2*math.atan(math.tan(camera.data.angle_x/2)/(1440/850))),'fovAxis':'vertical','aspect':1440/850,'blenderPosition':list(CAM_POS),'blenderTarget':list(CAM_TARGET)},
     'objects':interactive,
     'triangles':triangles,

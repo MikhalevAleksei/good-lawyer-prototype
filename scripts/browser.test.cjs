@@ -10,9 +10,13 @@ fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({headless:true});
  const errors=[];
- const page=await browser.newPage({viewport:{width:1440,height:1050}});
+ const page=await browser.newPage({viewport:{width:1440,height:1050},reducedMotion:'reduce'});
  page.on('pageerror',e=>errors.push(e.message));
- const click=s=>page.locator(s).click();
+ const click=async s=>{
+  const target=/data-phone|data-order/.test(s)?'phone':/data-desk|court-button|data-action="day"/.test(s)?'laptop':null;
+  if(target&&await page.locator('#room-focus-bar').isVisible()&&(await page.evaluate(()=>OfficeRoom.diagnostics().focus))!==target)await page.locator(`#room-focus-bar [data-room-view="${target}"]`).click();
+  await page.locator(s).click();
+ };
  const text=s=>page.locator(s).innerText();
  const screenshot=async name=>{await page.evaluate(()=>{window.scrollTo(0,0);for(const id of ['desktop-content','phone-content'])document.getElementById(id)?.scrollTo(0,0);});return page.screenshot({path:path.join(out,name+'.png'),fullPage:true});};
  try {
@@ -22,7 +26,7 @@ fs.mkdirSync(out,{recursive:true});
   assert.equal(await page.locator('[data-action="continue"]').isVisible(),false);
   await screenshot('menu-desktop');
   await click('[data-action="rules"]');assert.match(await text('#rules'),/очки|ОД/);
-  await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="cases"]');
+  await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="laptop"]');
   assert.match(await text('#desktop-content'),/Чужая подпись/);
   await click('[data-desk="plan"]');assert.match(await text('#desktop-content'),/нет активного дела/);
   await click('[data-desk="cases"]');await click('[data-offer="first-signature"]');
@@ -74,31 +78,31 @@ fs.mkdirSync(out,{recursive:true});
   for(const width of [320,360,640,700,736,860,1024,1440]) {
    await page.setViewportSize({width,height:950});
    for(const desk of ['cases','dossier','witness','plan','career','news','mail']) {
-    if(width<=700)await click('button[data-device="laptop"]');
+    if(width<=700)await click('#room-focus-bar [data-room-view="laptop"]');
     await click(`[data-desk="${desk}"]`);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`overflow ${width} ${desk}`);
    }
-   if(width<=700)await click('button[data-device="phone"]');
+   if(width<=700)await click('#room-focus-bar [data-room-view="phone"]');
    for(const phone of ['chat','bank']){
     await click(`[data-phone="${phone}"]`);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`overflow ${width} ${phone}`);
    }
   }
   await page.setViewportSize({width:390,height:844});
-  await click('button[data-device="phone"]');await screenshot('bank-mobile');
+  await click('#room-focus-bar [data-room-view="phone"]');await screenshot('bank-mobile');
   await click('[data-phone="chat"]');await screenshot('phone-mobile');
-  await click('button[data-device="laptop"]');await click('[data-desk="witness"]');await screenshot('witness-mobile');
+  await click('#room-focus-bar [data-room-view="laptop"]');await click('[data-desk="witness"]');await screenshot('witness-mobile');
   await click('[data-action="menu"]');await screenshot('menu-mobile');
   await click('[data-action="continue"]');await page.reload();
   assert.equal(await page.locator('#menu').isVisible(),true);assert.equal(await page.locator('[data-action="continue"]').isVisible(),false);
-  await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="cases"]');await click('[data-offer="first-signature"]');
+  await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="laptop"]');await click('[data-offer="first-signature"]');
   for(let i=0;i<4;i++)await click('[data-action="day"]');
   await click('#court-button');await click('[data-court-answer="0"]');
   await click('#overlay [data-action="menu"]');await click('[data-action="continue"]');
   assert.match(await text('#day-label'),/5/);assert.equal(await page.locator('.result-hero').count(),0);
   await click('#court-button');await click('[data-court-answer="0"]');await click('[data-action="skip"]');
   assert.match(await text('.result-hero'),/Доводов не хватило/);assert.match(await text('.result-finance'),/12\s*000/);
-  await click('[data-action="menu"]');await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="cases"]');
+  await click('[data-action="menu"]');await click('[data-action="new-game"]');await click('#room-shortcuts [data-room-view="laptop"]');
   assert.match(await text('#day-label'),/1/);assert.match(await text('#rep'),/8/);
   await click('[data-action="menu"]');await page.goto(new URL('scenario.html',base).href);assert.equal((await page.title()).length>0,true);
   await page.goBack();assert.equal(await page.locator('#menu').isVisible(),true);
