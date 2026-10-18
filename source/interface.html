@@ -23,7 +23,7 @@
 
     <section id="office-room" class="office-room" aria-label="Трёхмерный кабинет адвоката" hidden>
       <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 ₽</strong></div></div></header>
-      <nav id="room-focus-bar" class="room-focus-bar" aria-label="Работа с устройством" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-action="room">← Общий вид</button></div></nav>
+      <nav id="room-focus-bar" class="room-focus-bar" aria-label="Рабочие места кабинета" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-room-view="archive">Архив</button><button data-action="room">← Общий вид</button></div></nav>
       <div id="room-viewport" class="room-viewport">
         <img class="room-preview" src="assets/models/office-preview.png" alt="Кабинет адвоката: ноутбук на столе, архивный шкаф и настольная лампа слева, кресло и карта справа, телефон, кактус, две папки и перьевая ручка">
         <div id="room-webgl" class="room-webgl"></div><div id="room-css3d" class="room-css3d"></div>
@@ -33,6 +33,9 @@
         <p id="room-hint" class="room-hint">Выберите предмет, чтобы начать работу</p>
         <div id="room-screen" class="room-screen" aria-label="Рабочий стол ноутбука"><div id="room-laptop-home"></div><div id="room-laptop-workspace" hidden></div></div>
         <div id="room-phone-screen" class="room-phone-screen" aria-label="Экран телефона"><button class="phone-wake" data-room-view="phone"><span>09:41</span><strong>Личная линия</strong><small>Коснитесь, чтобы открыть</small></button><div id="room-phone-workspace" hidden></div></div>
+        <section id="room-archive-shelves" class="room-archive-shelves" aria-label="Папки завершённых дел" hidden></section>
+        <div id="room-archive-controls" class="room-archive-controls" hidden></div>
+        <section id="room-archive-detail" class="room-archive-detail" aria-labelledby="archive-document-title" hidden></section>
       </div>
       <nav id="room-mobile-programs" class="room-mobile-programs" aria-label="Программы ноутбука"></nav>
       <nav id="room-shortcuts" class="room-shortcuts" aria-label="Предметы кабинета"></nav>

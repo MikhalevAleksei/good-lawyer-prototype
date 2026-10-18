@@ -49,9 +49,9 @@
   }
   function newsView() {return `<div class="eyebrow">Городская хроника</div><h2 class="section-title">Что происходит за окном.</h2>${game.s.news.map(n=>`<article class="news"><small>ДЕНЬ ${n.day} / ВАША ПРАКТИКА</small><h3>${safe(n.title)}</h3><p>${safe(n.body)}</p></article>`).join('')}<article class="news"><small>ГОРОД / РАССЛЕДОВАНИЕ</small><h3>Чей берег — Северный?</h3><p>Название холдинга всё чаще появляется в спорах пригорода и порта. Отдельные дела могут оказаться частями одной истории.</p></article><article class="news"><small>ОБЩЕСТВО / ЮРИДИЧЕСКАЯ КЛИНИКА</small><h3>Помощь тем, кто не может заплатить</h3><p>Бесплатная защита повышает известность и снижает внимание властей. Все расходы адвокат оплачивает сам. Собранные улики действующего расследования сохраняются.</p></article>`;}
   function mailView() {return `<div class="eyebrow">Входящие / ${game.s.mail.length} писем</div><h2 class="section-title">Почта практики</h2>${game.s.active?btn('Открыть активное досье →','dossier','primary'):btn('Выбрать следующее дело →','cases','primary')}${game.s.mail.map(m=>`<article class="mail"><small>${safe(m.from)} / ДЕНЬ ${m.day}</small><h3>${safe(m.title)}</h3><p>${safe(m.body)}</p></article>`).join('')}`;}
-  function resultView(r=game.s.result) {
+  function resultView(r=game.s.result,showActions=true) {
     if(!r)return empty('Результатов пока нет','Первый разбор появится после заседания.');
-    return `<div class="eyebrow">${r.training?'Тренировочный ':''}Итог заседания</div><div class="result-hero ${r.won?'':'fail'}"><div><h2 class="section-title">${r.late?'Слушание пропущено.':r.won?'Защита сработала.':'Доводов не хватило.'}</h2><p class="section-lead" style="margin:0">${safe(r.title)}</p></div><div><span class="result-score">${r.score}%</span><small>Цель: ${r.target}%</small></div></div>${r.late?'<div class="hint warning">Дело проиграно из-за пропуска заседания независимо от качества подготовки.</div>':''}<div class="section-head"><h3>Из чего сложился результат</h3></div>${r.rows.map(row=>`<div class="result-row"><span>${safe(row.label)}</span><b class="${row.value<0?'negative':''}">${row.value>0?'+':''}${row.value}</b></div>`).join('')}<div class="result-finance">Гонорар: <strong>${money(r.fee)}</strong><br>Известность +${r.repGain} · профессионализм +${r.professionalGain}<br>Личные вложения: ${money(r.invested)}<br>Возвращено клиенту: ${money(r.returned)}${r.training?'<br><strong>Все изменения относятся только к тренировке. Карьера сохранена.</strong>':''}</div>${r.training?btn('Вернуться в карьеру →','leave-training','primary'):btn(game.s.campaignComplete?'Открыть итоги кампании →':'Следующая глава →','cases','primary')}`;
+    return `<div class="eyebrow">${r.training?'Тренировочный ':''}Итог заседания</div><div class="result-hero ${r.won?'':'fail'}"><div><h2 class="section-title">${r.late?'Слушание пропущено.':r.won?'Защита сработала.':'Доводов не хватило.'}</h2><p class="section-lead" style="margin:0">${safe(r.title)}</p></div><div><span class="result-score">${r.score}%</span><small>Цель: ${r.target}%</small></div></div>${r.late?'<div class="hint warning">Дело проиграно из-за пропуска заседания независимо от качества подготовки.</div>':''}<div class="section-head"><h3>Из чего сложился результат</h3></div>${r.rows.map(row=>`<div class="result-row"><span>${safe(row.label)}</span><b class="${row.value<0?'negative':''}">${row.value>0?'+':''}${row.value}</b></div>`).join('')}<div class="result-finance">Гонорар: <strong>${money(r.fee)}</strong><br>Известность +${r.repGain} · профессионализм +${r.professionalGain}<br>Личные вложения: ${money(r.invested)}<br>Возвращено клиенту: ${money(r.returned)}${r.training?'<br><strong>Все изменения относятся только к тренировке. Карьера сохранена.</strong>':''}</div>${showActions?(r.training?btn('Вернуться в карьеру →','leave-training','primary'):btn(game.s.campaignComplete?'Открыть итоги кампании →':'Следующая глава →','cases','primary')):''}`;
   }
   function nextBill(){return 1+7*(Math.floor((game.s.day-1)/7)+1);}
   function phoneView() {
@@ -62,7 +62,7 @@
     const orders=Object.entries(ORDERS).filter(([,o])=>o.agent===agent);
     return `<div class="contact"><div class="avatar">${agent==='mark'?'МВ':agent==='irina'?'ИЛ':'••'}</div><div><select id="agent-select" aria-label="Исполнитель">${contacts.map(k=>`<option value="${k}" ${agent===k?'selected':''}>${names[k]}</option>`).join('')}</select><small>${busy?`В работе: ${busy}`:agent==='mark'?'Частный детектив':agent==='irina'?'Аналитик'+(s.assistant?' + помощник':''):'Теневые поручения'}</small></div></div><div class="chat">${chat.length?chat.map(m=>`<div class="bubble ${m.mine?'mine':''}">${safe(m.text)}<small>${m.mine?'Вы':'Получено'} · день ${m.day}</small></div>`).join(''):`<div class="bubble">${a?'Готов принять поручение. Результаты появятся после перехода дня.':'Сначала заключите договор с клиентом. Затем сможем начать работу.'}<small>${names[agent]}</small></div>`}</div><div class="orders"><div class="eyebrow">Поручения по делу ${a?'№ '+safe(game.definition.no):''}</div>${orders.map(([key,o])=>{const q=game.quote(key),blocked=game.orderBlock(key);return `<button class="order ${o.heat?'illegal':''}" data-order="${key}" ${blocked?'disabled':''}><strong>${o.label}</strong><small>${money(o.cost)} · ${o.ap} ОД · ${q?q.days:o.days} дн.</small>${q?`<small>Клиент ${money(q.client)} · вы ${money(q.personal)}</small>`:''}${o.heat?'<small class="risk">Незаконно · риск расследования</small>':''}${blocked?`<small>${safe(blocked)}</small>`:''}</button>`;}).join('')}</div><p class="phone-tip">${a?.ap===0?'ОД закончились. Дождитесь запущенных поручений, составьте план и идите в суд.':'Поручения идут параллельно вашей подготовке. У каждого исполнителя своя очередь.'}${a?`<br>${btn('Проверить бюджет →','bank','text-button')}`:''}</p>`;
   }
-  let roomSettings={quality:'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,newsPaused:false},caseNotes={},archivedId=null;
+  let roomSettings={quality:'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,newsPaused:false},caseNotes={},archivedId=null,archivePage=0,archiveRenderKey=null,pendingArchiveFocus=false;
   const roomIcons={
     cases:'M5 7h14v14H5z M8 3v7 M16 3v7 M5 12h14',dossier:'M3 7h7l2 3h9v10H3z M3 7V4h7l2 3',witness:'M8 10a4 4 0 1 0 8 0a4 4 0 1 0-8 0 M4 22v-2a8 8 0 0 1 16 0v2',evidence:'M10 3a7 7 0 1 0 0 14a7 7 0 1 0 0-14 M15 15l7 7 M7 9h6 M10 6v6',actions:'M4 5h16v14H4z M8 2v6 M16 2v6 M8 12l3 3l5-5',notes:'M4 3h14v18H4z M8 7h6 M8 11h5 M8 15h4 M19 5l3 3-6 6-3 1 1-3z',plan:'M3 5h7v5H3z M14 15h7v5h-7z M6 10v8h8 M17 3v7 M14 7l3 3 3-3',mail:'M3 5h18v14H3z M3 6l9 7 9-7',bank:'M3 8l9-6 9 6z M5 10v9 M10 10v9 M15 10v9 M20 10v9 M2 22h20',settings:'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M10 2h4l1 4 3-1 3 4-3 3 3 3-3 4-3-1-1 4h-4l-1-4-3 1-3-4 3-3-3-3 3-4 3 1z',shop:'M4 8h16l-1 13H5z M8 8V6a4 4 0 0 1 8 0v2',archive:'M3 3h18v5H3z M5 8v13h14V8 M9 12h6',city:'M3 5l6-3 6 3 6-3v17l-6 3-6-3-6 3z M9 2v17 M15 5v17',wardrobe:'M9 3l3 2 3-2 6 4-3 5-2-1v11H8V11l-2 1-3-5z',chat:'M3 3h18v14H9l-6 5z M7 7h10 M7 11h7',career:'M12 3a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M4 22v-3a8 8 0 0 1 16 0v3'};
   function roomIcon(key){key=({laptop:'cases',phone:'chat'})[key]||key;return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${roomIcons[key]||roomIcons.dossier}"/></svg>`;}
@@ -74,6 +74,7 @@
   function openRoomView(view){
     if(view==='room'){ui.room=true;ui.focus=null;return;}
     if(view==='laptop'||view==='phone'){selectDevice(view);return;}
+    if(view==='archive'){archivedId=null;navigate('archive');return;}
     if(view==='chat'||view==='bank'){ui.phone=view;selectDevice('phone');}
     else {navigate(view);if(view==='actions')ui.phone='chat';}
   }
@@ -88,11 +89,16 @@
     $('#room-phone-workspace').hidden=!embedded||ui.focus!=='phone';
     $('.phone-wake').hidden=embedded&&ui.focus==='phone';
     $('#room-focus-bar').hidden=!ui.room||!ui.focus;
-    $('#room-focus-title').textContent=(ui.focus==='phone'?'Личная линия':'Рабочий ноутбук')+' · день '+game.s.day+(game.s.active?' · '+game.s.active.ap+' ОД':'');
+    $('#room-focus-title').textContent=({phone:'Личная линия',laptop:'Рабочий ноутбук',archive:'Архив завершённых дел'}[ui.focus]||'Кабинет')+' · день '+game.s.day+(game.s.active?' · '+game.s.active.ap+' ОД':'');
     for(const button of $('#room-focus-bar').querySelectorAll('[data-room-view]'))button.setAttribute('aria-pressed',String(button.dataset.roomView===ui.focus));
     globalThis.OfficeRoom?.setFocus(ui.room?ui.focus:null);
   }
-  window.addEventListener('office:unavailable',()=>{if(ui.room&&ui.focus){ui.room=false;render();}});
+  window.addEventListener('office:unavailable',()=>{
+    if(ui.room&&ui.focus){
+      if(ui.focus==='archive'){ui.desk=archivedId?'archiveDetail':'archive';ui.device='laptop';ui.focus='laptop';}
+      ui.room=false;render();
+    }
+  });
   function renderRoom(){
     const s=game.s,a=s.active,c=game.definition;
     $('#room-day').textContent=s.day;$('#room-rep').textContent=s.rep;$('#room-ap').textContent=a?a.ap+' / '+a.apMax:'—';$('#room-money').textContent=money(s.money);
@@ -110,13 +116,34 @@
     $('#room-alert').hidden=!s.investigation;
     if(s.investigation)$('#room-alert').innerHTML=`<strong>Расследование против вас.</strong> Сила обвинения ${s.investigation.evidence}/100. Решение в день ${s.investigation.due}. <button data-room-view="cases">Открыть материалы →</button>`;
     root.dataset.roomMotion=String(roomSettings.motion);
-    globalThis.OfficeRoom?.mount({viewport:$('#room-viewport'),canvasHost:$('#room-webgl'),cssHost:$('#room-css3d'),screenElement:$('#room-screen'),phoneElement:$('#room-phone-screen'),onOpen:view=>{if(screen==='game'&&$('#overlay').hidden){openRoomView(view);render();}},quality:roomSettings.quality});
+    globalThis.OfficeRoom?.mount({viewport:$('#room-viewport'),canvasHost:$('#room-webgl'),cssHost:$('#room-css3d'),screenElement:$('#room-screen'),phoneElement:$('#room-phone-screen'),archiveElement:$('#room-archive-shelves'),onOpen:view=>{if(screen==='game'&&$('#overlay').hidden){openRoomView(view);render();}},quality:roomSettings.quality});
     globalThis.OfficeRoom?.sync();
   }
   function evidenceView(){const a=game.s.active;if(!a)return empty();const materials=a.materials.filter(m=>m.id!=='witness');return `<div class="eyebrow">Дело № ${safe(game.definition.no)} / Улики</div><h2 class="section-title">Что подтверждено фактами.</h2><p class="section-lead">Проверяйте источник и связь с задачей клиента. Неподтверждённое сообщение может ослабить защиту. Для суда выберите материалы в плане.</p>${tasksView()}<div class="materials">${materials.map(m=>materialCard(m)).join('')}</div>${btn('Открыть план защиты →','plan','primary')}`;}
   function actionsView(){const a=game.s.active;if(!a)return empty();return `<div class="eyebrow">Фоновая работа / ${a.ap} ОД</div><h2 class="section-title">Следственные действия</h2><p class="section-lead">Исполнители работают параллельно вашей подготовке. Поручения расходуют ОД и бюджет; результат приходит в назначенный игровой день.</p>${tasksView()}<div class="room-action-grid">${Object.entries(ORDERS).filter(([,o])=>o.agent!=='contact'||game.s.stage>=3||game.s.training).map(([key,o])=>{const q=game.quote(key),blocked=game.orderBlock(key);return `<article class="material ${o.heat?'risky':''}"><div class="material-top"><h3>${o.label}</h3><span class="tag ${o.heat?'red':''}">${o.heat?'Незаконно':'Законно'}</span></div><p>${names[o.agent]} · ${money(o.cost)} · ${o.ap} ОД · ${q.days} дн.<br>Бюджет клиента ${money(q.client)}; ваши средства ${money(q.personal)}.</p><button class="secondary" data-order="${key}" ${blocked?'disabled':''}>${blocked||'Дать поручение →'}</button></article>`;}).join('')}</div>${btn('Открыть переписку →','phone','text-button')}`;}
   function notesView(){const a=game.s.active;if(!a)return empty('Блокнот ждёт первое дело','Примите дело: здесь можно будет записать свою версию событий и проверить несостыковку.');const c=game.definition,key=(game.s.training?'training:':'career:')+a.id;return `<div class="eyebrow">Личный блокнот / ${safe(c.client)}</div><h2 class="section-title">Мысли, которые стоит сохранить.</h2><p class="section-lead">Заметки не тратят ОД. Они остаются в текущей сессии при переходах между кабинетом и разделами.</p><label class="room-field-label" for="case-notes">Ваши заметки по делу</label><textarea id="case-notes" data-note-key="${key}" rows="7" maxlength="4000" placeholder="Версия событий, вопросы свидетелю, порядок выступления…">${safe(caseNotes[key]||'')}</textarea><p id="notes-state" class="section-lead">Сохраняется в этой сессии.</p><section class="puzzle"><span class="eyebrow">Анализ / необязательный бонус</span><h3>Найти несостыковку</h3><p>${safe(c.puzzle.prompt)}</p>${a.puzzleAttempted?`<div class="hint ${a.puzzleSolved?'':'warning'}">${a.puzzleSolved?'Заметка добавлена в досье.':'Бонус не получен.'}<br>${safe(c.puzzle.explanation)}</div>`:`<div class="choices">${c.puzzle.options.map((answer,i)=>`<button class="option" data-puzzle="${i}" aria-pressed="${a.puzzleChoice===i}" ${!game.canSpend(1)?'disabled':''}>${safe(answer)}</button>`).join('')}</div>${btn('Проверить · 1 ОД','solve','secondary',a.puzzleChoice===null||!game.canSpend(1))}`}</section>`;}
   function archiveView(){const s=game.s;return `<div class="eyebrow">Архив / ${s.completed.length} дел</div><h2 class="section-title">История вашей практики.</h2><p class="section-lead">Здесь хранятся результаты процессов. После завершения кампании доступны тренировочные повторы без изменения карьерных ресурсов.</p>${s.completed.length?`<div class="materials">${s.completed.map(r=>`<article class="material"><div class="material-top"><h3>${safe(r.title)}</h3><span class="tag ${r.won?'green':'red'}">${r.won?'Успех':'Неудача'} · ${r.score}%</span></div><p>День ${r.day} · гонорар ${money(r.fee)}</p><button class="secondary" data-archive-id="${r.id}">Разбор заседания →</button>${s.campaignComplete?`<button class="text-button" data-training="${r.id}" ${s.investigation?'disabled':''}>Переиграть без изменения карьеры →</button>`:''}</article>`).join('')}</div>`:'<div class="hint">Первая папка появится после завершения дела.</div>'}${btn('К доступным делам →','cases','primary')}`;}
+  function renderArchive(){
+    const s=game.s,visible=ui.room&&ui.focus==='archive'&&spatialAvailable();
+    const shelves=$('#room-archive-shelves'),controls=$('#room-archive-controls'),detail=$('#room-archive-detail');
+    const pages=Math.max(1,Math.ceil(s.completed.length/6));archivePage=Math.max(0,Math.min(pages-1,archivePage));
+    const record=s.completed.find(r=>r.id===archivedId);
+    shelves.hidden=controls.hidden=!visible;detail.hidden=!visible||!record;
+    shelves.inert=controls.inert=!!record;
+    $('#room-viewport').dataset.archiveOpen=String(visible&&!!record);
+    const key=JSON.stringify([s.completed,archivePage,record?.id,s.campaignComplete,!!s.investigation]);
+    if(key===archiveRenderKey)return;
+    archiveRenderKey=key;
+    const entries=s.completed.slice(archivePage*6,archivePage*6+6);
+    shelves.innerHTML=entries.length?`<div class="archive-folder-grid">${entries.map((r,i)=>`<button class="archive-folder ${r.won?'won':'lost'}" data-archive-id="${safe(r.id)}" aria-label="Открыть дело: ${safe(r.title)}. ${r.won?'Успех':'Неудача'}, ${r.score}%"><span class="archive-folder-number">ДЕЛО / ${String(archivePage*6+i+1).padStart(2,'0')}</span><strong>${safe(r.title)}</strong><span class="archive-folder-outcome">${r.won?'Успех':'Неудача'} · ${r.score}%</span><span class="archive-folder-day">День ${r.day} <b aria-hidden="true">↗</b></span></button>`).join('')}</div>`:`<div class="archive-empty"><span class="archive-empty-icon" aria-hidden="true">${roomIcon('archive')}</span><h2>История вашей практики</h2><p>Первая папка появится здесь после завершения дела.</p><button class="secondary" data-room-view="cases">К доступным делам →</button></div>`;
+    controls.innerHTML=`<div class="archive-caption"><strong>Архив практики</strong><span>${s.completed.length?`Завершено дел: ${s.completed.length}. Выберите папку.`:'Здесь будут храниться завершённые дела.'}</span></div>${pages>1?`<nav class="archive-pages" aria-label="Страницы архива"><button data-archive-page="-1" ${archivePage===0?'disabled':''} aria-label="Предыдущие папки">←</button><span role="status">${archivePage+1} / ${pages}</span><button data-archive-page="1" ${archivePage===pages-1?'disabled':''} aria-label="Следующие папки">→</button></nav>`:''}`;
+    detail.innerHTML=record?`<header class="archive-document-header"><div><span class="eyebrow">Архив · день ${record.day}</span><h2 id="archive-document-title" tabindex="-1">${safe(record.title)}</h2></div><button class="secondary" data-action="archive-close">← К папкам</button></header><div class="archive-document-body" tabindex="0" aria-label="Разбор завершённого дела">${resultView(record,false)}${s.campaignComplete?`<button class="secondary" data-training="${safe(record.id)}" ${s.investigation?'disabled':''}>Переиграть без изменения карьеры →</button>`:''}</div>`:'';
+  }
+  window.addEventListener('office:focusend',e=>{
+    if(e.detail.device==='archive'&&pendingArchiveFocus&&screen==='game'){
+      pendingArchiveFocus=false;($('#room-archive-shelves button')||$('#room-focus-bar [data-room-view="archive"]'))?.focus({preventScroll:true});
+    }
+  });
   function archivedView(){const record=game.s.completed.find(r=>r.id===archivedId);return record?`<button class="text-button" data-room-view="archive">← Вернуться в архив</button>${resultView(record)}`:archiveView();}
   function cityView(){const s=game.s,regions=[['Пригород',1,'Первые клиенты и небольшие дела'],['Старый порт',3,'Следы, ведущие к холдингу'],['Речной район',5,'Люди, которые знают слишком много'],['Деловой квартал',7,'Деньги, документы и репутация'],['Правительственный холм',9,'Последние звенья истории']];return `<div class="eyebrow">Новореченск / карта города</div><h2 class="section-title">У каждого района — свои дела.</h2><p class="section-lead">Карьера открывает следующие главы. Сейчас ${s.campaignComplete?'кампания завершена':'глава '+s.stage+' из 10'}; вы ведёте одно дело за раз.</p><div class="room-districts">${regions.map(([title,chapter,desc])=>`<article class="material ${s.stage>=chapter?'selected':''}"><div class="material-top"><h3>${title}</h3><span class="tag">С главы ${chapter}</span></div><p>${desc}</p>${s.stage>=chapter&&s.stage<chapter+2&&!s.campaignComplete?'<button class="primary" data-room-view="cases">Дела текущей главы →</button>':`<p><small>${s.stage>=chapter?'Район открыт':'Откроется по ходу кампании'}</small></p>`}</article>`).join('')}</div>${s.campaignComplete?'<button class="primary" data-room-view="archive">Открыть архив →</button>':''}`;}
   function wardrobeView(){const s=game.s;return `<div class="eyebrow">Зеркало / гардероб</div><h2 class="section-title">Ваш деловой облик.</h2><div class="room-wardrobe"><img src="${portrait}" alt="Портрет адвоката в деловом костюме"><div><h3>${safe(s.name)}</h3><p class="section-lead">${s.suit?'Деловой костюм · состояние '+s.wear+'%':'Базовый костюм начинающего адвоката'}</p><div class="hint">Деловой костюм даёт +12 к имиджу и +2 балла в суде, пока его состояние выше нуля. Каждое дело изнашивает костюм на 15%.</div>${s.suit?btn('Уход за костюмом · 3 000 ₽','buy-repair','secondary',s.wear===100||s.training):btn('Приобрести костюм · 12 000 ₽','buy-suit','primary',s.training)}<p class="section-lead" style="margin-top:16px">Покупки оплачиваются только с личного счёта. Они доступны при отсутствии задолженности.</p><button class="text-button" data-room-view="career">Развитие практики →</button></div></div>`;}
@@ -139,6 +166,7 @@
     $('.room-return').hidden=!!ui.room&&!ui.focus;
     $('.room-return').textContent='← Общий вид';
     renderRoom();
+    renderArchive();
     syncDeviceSurfaces();
     $('#chapter-label').textContent=s.training?'Тренировочное дело':s.campaignComplete?'Северный берег · кампания завершена':`Северный берег · глава ${s.stage} / 10`;
     $('#day-label').textContent='День '+s.day;$('#district-label').textContent=c?.district||'Новореченск';$('#lawyer-name').textContent=s.name;
@@ -167,7 +195,7 @@
   function clearOverlay() {movieToken++;finishMovie=null;const v=$('#court-video');if(v)v.pause();$('#overlay').hidden=true;$('#overlay').innerHTML='';$('#workspace').inert=false;}
   function showMenu() {globalThis.OfficeRoom?.setActive(false);clearOverlay();game.cancelCourt();screen='menu';$('#menu').hidden=false;$('#workspace').hidden=true;$('[data-action="continue"]').hidden=!started||(!!game.s.ending&&!game.s.training);$('#rules').hidden=true;$('[data-action="rules"]').setAttribute('aria-expanded','false');window.scrollTo(0,0);$('[data-action="new-game"]').focus({preventScroll:true});}
   function enterGame() {screen='game';$('#menu').hidden=true;$('#workspace').hidden=false;render();window.scrollTo(0,0);$('[data-action="menu"]').focus({preventScroll:true});}
-  function newGame() {clearOverlay();game.reset();ui={desk:'cases',phone:'chat',agent:'mark',device:'laptop',allTransactions:false,room:true,focus:null};caseNotes={};viewScroll={};lastDeskKey=null;lastPhoneKey=null;roomSettings={quality:'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,newsPaused:false};globalThis.OfficeRoom?.setView('reset');globalThis.OfficeRoom?.setQuality(roomSettings.quality);globalThis.OfficeRoom?.setMotion(roomSettings.motion);started=true;enterGame();}
+  function newGame() {clearOverlay();game.reset();ui={desk:'cases',phone:'chat',agent:'mark',device:'laptop',allTransactions:false,room:true,focus:null};caseNotes={};archivedId=null;archivePage=0;archiveRenderKey=null;pendingArchiveFocus=false;viewScroll={};lastDeskKey=null;lastPhoneKey=null;roomSettings={quality:'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,newsPaused:false};globalThis.OfficeRoom?.setView('reset');globalThis.OfficeRoom?.setQuality(roomSettings.quality);globalThis.OfficeRoom?.setMotion(roomSettings.motion);started=true;enterGame();}
   function openOverlay(html) {globalThis.OfficeRoom?.setActive(false);$('#overlay').innerHTML=html;$('#overlay').hidden=false;$('#workspace').inert=true;$('#overlay').querySelector('button')?.focus();}
   function showCourt() {
     if(!game.beginCourt().ok){render();return;}
@@ -185,7 +213,13 @@
     v.play().catch(()=>{if(token===movieToken&&$('[data-action="play"]'))$('[data-action="play"]').hidden=false;});
   }
   function showPrison(){if($('#prison-title'))return;openOverlay(`<section class="dialog prison" role="dialog" aria-modal="true" aria-labelledby="prison-title"><div class="eyebrow">Дело против адвоката / финал</div><h2 id="prison-title">Теперь вы —<br>подзащитный.</h2><p>Следствие доказало систематическое вмешательство в показания. Суд назначил тюремное заключение. Практика закрыта.</p><p>День ${game.s.day} · завершено дел: ${game.s.completed.length} · известность: ${game.s.rep}</p><div class="dialog-actions">${game.s.training?btn('Вернуться в карьеру','leave-training','primary'):btn('Новая игра','new-game','primary')}${btn('Главное меню','menu','secondary')}</div></section>`);}
-  function navigate(desk){ui.desk=desk;selectDevice('laptop');if(desk==='mail')game.s.unread=0;}
+  function navigate(desk){
+    if((desk==='archive'||desk==='archiveDetail')&&spatialAvailable()){
+      pendingArchiveFocus=ui.focus!=='archive';ui.room=true;ui.focus='archive';
+      if(desk==='archive')archivedId=null;
+    }else{ui.desk=desk;selectDevice('laptop');}
+    if(desk==='mail')game.s.unread=0;
+  }
   root.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled||!root.contains(b))return;const action=b.dataset.action;
     if(action==='new-game'){newGame();return;}if(action==='menu'){showMenu();return;}
@@ -200,12 +234,14 @@
       else if(action==='cancel-court'){clearOverlay();game.cancelCourt();render();}
       return;
     }
-    const previous=game.s.result;
+    const previous=game.s.result,previousArchiveId=archivedId;
     if(b.dataset.roomView)openRoomView(b.dataset.roomView);
     else if(b.dataset.roomCamera){if(b.dataset.roomCamera==='reset'){openRoomView('room');globalThis.OfficeRoom?.setView('reset');}else globalThis.OfficeRoom?.setView(b.dataset.roomCamera);}
     else if(b.dataset.roomNewsPause){roomSettings.newsPaused=!roomSettings.newsPaused;}
     else if(b.dataset.roomDay){game.nextDay();}
     else if(b.dataset.archiveId){archivedId=b.dataset.archiveId;navigate('archiveDetail');}
+    else if(b.dataset.archivePage){archivePage+=Number(b.dataset.archivePage);}
+    else if(action==='archive-close'){archivedId=null;}
     else if(action==='room')openRoomView('room');
     else if(b.dataset.desk)navigate(b.dataset.desk);
     else if(b.dataset.phone){ui.phone=b.dataset.phone;selectDevice('phone');}
@@ -220,7 +256,7 @@
     else if(b.dataset.line)game.setLine(b.dataset.line);
     else if(b.dataset.up)game.move(b.dataset.up,-1);
     else if(b.dataset.down)game.move(b.dataset.down,1);
-    else if(b.dataset.training){if(game.training(b.dataset.training).ok){ui.desk='dossier';ui.agent='mark';ui.phone='chat';}}
+    else if(b.dataset.training){if(game.training(b.dataset.training).ok){archivedId=null;navigate('dossier');ui.agent='mark';ui.phone='chat';}}
     else if(['cases','dossier','witness','plan','career','result'].includes(action))navigate(action);
     else if(action==='phone')openRoomView('chat');
     else if(action==='bank')openRoomView('bank');
@@ -234,9 +270,12 @@
     else if(action==='transactions')ui.allTransactions=!ui.allTransactions;
     if(game.s.result&&game.s.result!==previous){navigate('result');}
     render();
+    if(b.dataset.archiveId&&ui.focus==='archive')$('#archive-document-title')?.focus({preventScroll:true});
+    if(action==='archive-close')$('#room-archive-shelves [data-archive-id="'+previousArchiveId+'"]')?.focus({preventScroll:true});
+    if(b.dataset.archivePage)($('#room-archive-controls [data-archive-page="'+b.dataset.archivePage+'"]:not(:disabled)')||$('#room-archive-controls [data-archive-page]:not(:disabled)')||$('#room-archive-shelves button'))?.focus({preventScroll:true});
     if(b.dataset.device||action==='phone'||action==='bank')window.scrollTo(0,0);
   });
-  root.addEventListener('change',e=>{if(e.target.id==='desk-app-select'){navigate(e.target.value);render();$('#desk-app-select').focus();}else if(e.target.id==='agent-select'){ui.agent=e.target.value;render();$('#agent-select').focus();}else if(e.target.id==='personal-funding'&&game.s.active){game.s.active.personalFunding=e.target.checked;game.say(e.target.checked?'Личные вложения разрешены. Перед поручением показана сумма.':'Оплата ограничена бюджетом клиента.');render();$('#personal-funding').focus();}});
+  root.addEventListener('change',e=>{if(e.target.id==='desk-app-select'){navigate(e.target.value);render();if(ui.focus==='archive')$('#room-focus-bar [data-room-view=archive]')?.focus({preventScroll:true});else $('#desk-app-select').focus();}else if(e.target.id==='agent-select'){ui.agent=e.target.value;render();$('#agent-select').focus();}else if(e.target.id==='personal-funding'&&game.s.active){game.s.active.personalFunding=e.target.checked;game.say(e.target.checked?'Личные вложения разрешены. Перед поручением показана сумма.':'Оплата ограничена бюджетом клиента.');render();$('#personal-funding').focus();}});
   root.addEventListener('submit',e=>{if(e.target.id==='name-form'){e.preventDefault();const value=$('#name-input').value.trim();if(value){game.s.name=value.slice(0,40);game.say('Имя адвоката обновлено.');render();}}});
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&screen==='game'){e.preventDefault();if(!$('#overlay').hidden&&game.s.active?.phase==='court'){clearOverlay();game.cancelCourt();render();}else if(!game.s.ending){if(!ui.room||ui.focus){openRoomView('room');render();}else showMenu();}return;}

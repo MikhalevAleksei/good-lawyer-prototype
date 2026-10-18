@@ -36,7 +36,7 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
   await p.keyboard.press('Escape');await p.locator('[data-object="FountainPen"]').waitFor({state:'visible'});
   const archive=p.locator('[data-object="Bookshelf"]');await archive.focus();
   assert.equal(await archive.evaluate(e=>e.classList.contains('is-visible')),true);
-  await archive.press('Enter');assert.match(await p.locator('#desktop-content').innerText(),/История вашей практики/);
+  await archive.press('Enter');assert.match(await p.locator('#room-archive-shelves').innerText(),/История вашей практики/);
   await p.keyboard.press('Escape');await p.locator('[data-object="FountainPen"]').waitFor({state:'visible'});
   await p.locator('[data-object="CityMap"]').focus();await p.keyboard.press('Tab');
   assert.equal(await p.locator('.room-object-label.is-visible').count(),1,'focus moves the single caption');

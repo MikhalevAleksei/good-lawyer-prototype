@@ -28,7 +28,7 @@ fs.mkdirSync(out,{recursive:true});
    assert.equal(await p.locator('#desktop-content').isVisible(),true);
    assert.equal(await p.locator('#office-room').isVisible(),true);await room();
   }
-  await click('[data-object="FolderArchive"]');assert.match(await p.locator('#desktop-content').innerText(),/История вашей практики/);await room();
+  await click('[data-object="FolderArchive"]');assert.match(await p.locator('#room-archive-shelves').innerText(),/История вашей практики/);await room();
   await click('#room-laptop-home [data-room-view="cases"]');await click('[data-offer="first-signature"]');
   await room();assert.match(await p.locator('#room-case-summary').innerText(),/Чужая подпись/);assert.match(await p.locator('#room-ap').innerText(),/12/);
   await click('[data-object="FolderCurrent"]');assert.match(await p.locator('#desktop-content').innerText(),/Материалы дела/);await room();

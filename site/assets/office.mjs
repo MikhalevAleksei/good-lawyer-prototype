@@ -1,4 +1,4 @@
-/* Blender geometry with live HTML surfaces attached to both devices. */
+/* Blender geometry with live HTML surfaces attached to devices and archive shelves. */
 import * as THREE from 'three';
 import {GLTFLoader} from './vendor/three/addons/loaders/GLTFLoader.js';
 import {CSS3DRenderer,CSS3DObject} from './vendor/three/addons/renderers/CSS3DRenderer.js';
@@ -11,7 +11,7 @@ const TITLES={Desk:'Письменный стол',WritingDesk:'Письменн
 let state=null;
 function objectOf(object){for(let o=object;o;o=o.parent)if(TITLES[o.name])return ({WritingDesk:'Desk',OfficePlant:'Cactus',Chair:'TripoChair'})[o.name]||o.name;return null;}
 function create(options){
- const {viewport,canvasHost,cssHost,screenElement,phoneElement,onOpen}=options;
+ const {viewport,canvasHost,cssHost,screenElement,phoneElement,archiveElement,onOpen}=options;
  const s=state={...options,active:false,ready:false,failed:false,focus:null,transition:null,quality:options.quality||'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,raf:0,frames:0,meshes:0,triangles:0,lastError:null};
  const loading=document.getElementById('room-loading'),hint=document.getElementById('room-hint');
  let renderer;
@@ -42,6 +42,13 @@ function create(options){
   if(!s.focus){
    position=s.defaultCamera.clone();target=s.defaultTarget.clone();
    const c=s.manifest.camera;fov=THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(c.fov/2))*Math.max(1,c.aspect/camera.aspect)));
+  }else if(s.focus==='archive'){
+   // Frame the upper shelves from above the desk and lamp, using the real model bounds.
+   const {center,size}=s.archive;
+   target=center.clone();fov=36;
+   const tangent=Math.tan(THREE.MathUtils.degToRad(fov/2));
+   const distance=Math.max(size.y*.77/(2*tangent*.84),size.x*1.08/(2*tangent*camera.aspect*.94));
+   position=target.clone().add(new THREE.Vector3(0,distance*.23,distance));
   }else{
    const surface=s.surfaces[s.focus],dimensions=s.focus==='phone'?s.manifest.phoneScreen:s.manifest.screen;
    target=surface.position.clone();fov=28;
@@ -77,7 +84,7 @@ function create(options){
  }
  function resize(retarget=true){
   width=Math.max(1,viewport.clientWidth);height=Math.max(1,viewport.clientHeight);
-  screenElement.inert=s.focus==='phone'||(width<=700&&s.focus!=='laptop');phoneElement.inert=s.focus==='laptop';
+  screenElement.inert=s.focus==='phone'||s.focus==='archive'||(width<=700&&s.focus!=='laptop');phoneElement.inert=s.focus==='laptop'||s.focus==='archive';
   renderer.setPixelRatio(s.quality==='low'?1:Math.min(devicePixelRatio||1,1.65));renderer.setSize(width,height,false);cssRenderer.setSize(width,height);
   camera.aspect=width/height;
   if(s.ready&&retarget){
@@ -89,7 +96,7 @@ function create(options){
  }
  s.resize=resize;s.invalidate=invalidate;
  s.setFocus=device=>{
-  const focus=device==='laptop'||device==='phone'?device:null;
+  const focus=['laptop','phone','archive'].includes(device)?device:null;
   if(s.focus===focus)return;
   s.clearTooltips?.();s.focus=focus;viewport.dataset.focus=focus||'overview';resize(false);moveToTarget(true);
  };
@@ -175,7 +182,13 @@ function create(options){
   const p=manifest.phoneScreen,phoneObject=new CSS3DObject(phoneElement);
   phoneElement.style.width=p.domWidth+'px';phoneElement.style.height=p.domHeight+'px';
   phoneObject.position.copy(phone.localToWorld(new THREE.Vector3(...p.position)));phone.getWorldQuaternion(phoneObject.quaternion);phoneObject.scale.set(p.width/p.domWidth,p.height/p.domHeight,1);cssScene.add(phoneObject);
-  s.surfaces={laptop:laptopObject,phone:phoneObject};s.ready=true;viewport.dataset.ready='true';viewport.dataset.focus=s.focus||'overview';loading.hidden=true;
+  const cabinet=gltf.scene.getObjectByName('Bookshelf');
+  if(!cabinet)throw Error('Archive cabinet is missing');
+  const bounds=new THREE.Box3().setFromObject(cabinet),size=bounds.getSize(new THREE.Vector3());
+  const center=new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y+size.y*.65,bounds.max.z+.045);
+  const archiveObject=new CSS3DObject(archiveElement);
+  archiveObject.position.copy(center);archiveObject.scale.set(size.x*.86/720,size.y*.55/1080,1);cssScene.add(archiveObject);
+  s.archive={center,size};s.surfaces={laptop:laptopObject,phone:phoneObject,archive:archiveObject};s.ready=true;viewport.dataset.ready='true';viewport.dataset.focus=s.focus||'overview';loading.hidden=true;
   resize(false);moveToTarget(false);invalidate();viewport.dispatchEvent(new CustomEvent('office:loaded',{bubbles:true}));
  }).catch(fallback);
  function fallback(error){s.failed=true;s.clearTooltips?.();s.lastError=error?.message||String(error);viewport.dataset.fallback='true';loading.hidden=false;loading.textContent='Все разделы доступны через кнопки под кабинетом.';loading.classList.add('room-fallback-note');if(s.raf)cancelAnimationFrame(s.raf);s.raf=0;window.dispatchEvent(new Event('office:unavailable'));}
