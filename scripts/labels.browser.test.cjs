@@ -12,6 +12,8 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
   await p.goto(base);await p.locator('[data-action="new-game"]').click();
   await p.waitForFunction(()=>OfficeRoom.diagnostics().ready&&OfficeRoom.diagnostics().frames>0);
   await p.mouse.move(5,5);
+  assert.equal(await p.locator('#room-object-labels [data-object="Desk"],#room-object-labels [data-object="BankersLamp"],#room-object-labels [data-object="Cactus"]').count(),0,'decorative props have no tooltip or keyboard stop');
+  assert.equal(await p.locator('#room-object-labels .room-object-label').evaluateAll(es=>es.every(e=>e.matches('button[data-room-view]'))),true,'every tooltip leads to a game action');
   assert.equal(await p.locator('.room-object-label.is-visible').count(),0,'overview has no permanent object captions');
   await p.screenshot({path:out+'/overview.png',fullPage:true});
   await p.locator('#room-laptop-home .os-top').hover();
@@ -22,6 +24,13 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
   await p.waitForFunction(()=>!document.querySelector('.room-object-label.is-visible'));
   // Raycast the visible props themselves; popup text does not intercept clicks.
   const viewport=await p.locator('#room-viewport').boundingBox();
+  for(const [name,x,y] of [['lamp',.12,.48],['cactus',.83,.46],['desk',.15,.84]]){
+   await p.mouse.move(viewport.x+viewport.width*x,viewport.y+viewport.height*y);
+   assert.equal(await p.locator('.room-object-label.is-visible').count(),0,name+' hover has no tooltip');
+   assert.equal(await p.locator('#room-hint').innerText(),'Выберите предмет, чтобы начать работу');
+   await p.mouse.click(viewport.x+viewport.width*x,viewport.y+viewport.height*y);
+   assert.equal(await p.evaluate(()=>OfficeRoom.diagnostics().focus),null,name+' click keeps the overview');
+  }
   await p.mouse.move(viewport.x+viewport.width*.85,viewport.y+viewport.height*.21);
   await p.waitForFunction(()=>document.querySelector('[data-object="CityMap"]').classList.contains('is-visible'));
   await p.mouse.click(viewport.x+viewport.width*.85,viewport.y+viewport.height*.21);
@@ -59,10 +68,9 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
    const r=e.getBoundingClientRect();return {x:r.x+r.width*.15,y:r.y+r.height*.8};
   });
   await touch.touchscreen.tap(deskPoint.x,deskPoint.y);
-  await touch.waitForFunction(()=>document.querySelector('[data-object="Desk"]').classList.contains('is-visible'));
-  await touch.screenshot({path:out+'/touch-tooltip.png',fullPage:true});
-  await touch.waitForFunction(()=>!document.querySelector('.room-object-label.is-visible'));
+  assert.equal(await touch.locator('.room-object-label.is-visible').count(),0,'decorative touch does not show a tooltip');
+  await touch.screenshot({path:out+'/touch-no-tooltip.png',fullPage:true});
   assert.equal(await touch.evaluate(()=>OfficeRoom.diagnostics().focus),null,'decorative touch does not change device or game state');
-  await touch.close();assert.deepEqual(errors,[]);console.log('PASS: hidden overview labels, pointer and keyboard popups, original object actions, focus/menu cleanup, responsive bounds and timed touch captions.');
+  await touch.close();assert.deepEqual(errors,[]);console.log('PASS: hidden overview labels, pointer and keyboard popups, original object actions, focus/menu cleanup, responsive bounds and no decorative captions or keyboard stops.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

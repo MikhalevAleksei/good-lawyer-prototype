@@ -7,9 +7,9 @@ import {RoomEnvironment} from './vendor/three/addons/environments/RoomEnvironmen
 const MODEL=new URL('models/office.glb?v=7497c6ea20f2',import.meta.url);
 const MANIFEST=new URL('models/office-manifest.json?v=b7a981ee500f',import.meta.url);
 const ACTIONS={Chair:'career',TripoChair:'career',Laptop:'laptop',Phone:'phone',FolderCurrent:'dossier',FolderArchive:'archive',FountainPen:'notes',Bookshelf:'archive',Mirror:'wardrobe',CityMap:'city',Lawyer:'career'};
-const TITLES={Desk:'Письменный стол',WritingDesk:'Письменный стол',BankersLamp:'Настольная лампа',Cactus:'Кактус',OfficePlant:'Растение',Chair:'Кресло адвоката · профиль',TripoChair:'Кресло адвоката · профиль',Laptop:'Ноутбук · дела и подготовка',Phone:'Телефон · переписка и банк',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архивный шкаф · история практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска',Lawyer:'Профиль адвоката'};
+const TITLES={Chair:'Кресло адвоката · профиль',TripoChair:'Кресло адвоката · профиль',Laptop:'Ноутбук · дела и подготовка',Phone:'Телефон · переписка и банк',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архивный шкаф · история практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска',Lawyer:'Профиль адвоката'};
 let state=null;
-function objectOf(object){for(let o=object;o;o=o.parent)if(TITLES[o.name])return ({WritingDesk:'Desk',OfficePlant:'Cactus',Chair:'TripoChair'})[o.name]||o.name;return null;}
+function objectOf(object){for(let o=object;o;o=o.parent)if(ACTIONS[o.name]&&TITLES[o.name])return o.name==='Chair'?'TripoChair':o.name;return null;}
 function create(options){
  const {viewport,canvasHost,cssHost,screenElement,phoneElement,archiveElement,onOpen}=options;
  const s=state={...options,active:false,ready:false,failed:false,focus:null,transition:null,quality:options.quality||'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,raf:0,frames:0,meshes:0,triangles:0,lastError:null};
@@ -116,15 +116,15 @@ function create(options){
   renderer.render(scene,camera);cssRenderer.render(cssScene,camera);s.frames++;projectLabels();
   if(moving)invalidate();
  }
- // Labels remain quiet until a real object is hovered, touched or keyboard-focused.
+ // Only objects with a game action have hover, touch or keyboard labels.
  // They never intercept the pointer, so the model remains the click target.
- let down=null,hover=null,focusedLabel=null,touchTimer=0;
+ let down=null,hover=null,focusedLabel=null;
  function showLabel(key){
   if(key===hover)return;
   hover=key;renderer.domElement.style.cursor=key&&ACTIONS[key]?'pointer':'grab';
   hint.textContent=key?TITLES[key]:'Выберите предмет, чтобы начать работу';projectLabels();
  }
- function clearTooltips(){clearTimeout(touchTimer);hover=null;focusedLabel=null;renderer.domElement.style.cursor='grab';hint.textContent='Выберите предмет, чтобы начать работу';projectLabels();}
+ function clearTooltips(){hover=null;focusedLabel=null;renderer.domElement.style.cursor='grab';hint.textContent='Выберите предмет, чтобы начать работу';projectLabels();}
  s.clearTooltips=clearTooltips;
  function projectLabels(){
   if(!s.ready)return;
@@ -150,12 +150,11 @@ function create(options){
   const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);
   const hit=raycaster.intersectObjects(s.model?.children||[],true)[0];return hit?objectOf(hit.object):null;
  }
- renderer.domElement.addEventListener('pointerdown',e=>{if(!s.ready||s.focus||s.transition)return;down={x:e.clientX,y:e.clientY};clearTimeout(touchTimer);showLabel(pick(e));});
+ renderer.domElement.addEventListener('pointerdown',e=>{if(!s.ready||s.focus||s.transition)return;down={x:e.clientX,y:e.clientY};showLabel(pick(e));});
  renderer.domElement.addEventListener('pointerup',e=>{
   if(!down||s.focus||s.transition||Math.hypot(e.clientX-down.x,e.clientY-down.y)>7){down=null;return;}
   down=null;const key=pick(e);showLabel(key);
   if(key&&ACTIONS[key])onOpen(ACTIONS[key]);
-  else if(e.pointerType==='touch')touchTimer=setTimeout(()=>showLabel(null),3000);
  });
  renderer.domElement.addEventListener('pointermove',e=>{
   if(!s.ready||s.focus||s.transition||e.pointerType==='touch')return;

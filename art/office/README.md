@@ -50,7 +50,7 @@ The laptop uses the independent `ScreenAnchor`: unit scale, no parent, a local X
 
 The phone uses `phoneScreen` from the manifest: a local glTF XY plane at `[0, 0.86, 0.115]` in the authored `Phone` group, physical size 0.72 × 1.49 and DOM width 320. The root's established tilt is preserved. The generated body is fitted behind the rectangular live interface. The static fallback face reads LINE / ONLINE; account balances appear only in the live bank UI. Focus cameras use each screen's normal and up direction.
 
-Named roots and `labelAnchors` support hover labels for the desk, lamp, cactus, chair and game interactions. The manifest records the coordinate conversion from Blender Z-up `(x, y, z)` to glTF Y-up `(x, z, -y)`.
+Named roots and `labelAnchors` locate scene objects. The interface shows labels only for objects with game actions; decorative desk, lamp and cactus anchors remain available in the scene but are not exposed as tooltips or keyboard stops. The manifest records the coordinate conversion from Blender Z-up `(x, y, z)` to glTF Y-up `(x, z, -y)`.
 
 ## Runtime and release
 
