@@ -191,7 +191,7 @@
       a.phase='court';a.courtChoice=null;return this.say('Судья задаёт вопрос по вашей защите.');
     }
     chooseCourt(index) {const a=this.s.active;if(!a||a.phase!=='court'||a.courtChoice!==null||!Number.isInteger(index)||index<0||index>2)return false;a.courtChoice=index;return true;}
-    cancelCourt() {const a=this.s.active;if(a&&a.phase==='court'){a.phase='prepare';a.courtChoice=null;}}
+    cancelCourt() {const a=this.s.active;if(a&&a.phase==='court'){a.phase='prepare';a.courtChoice=null;this.say('Вы вернулись к подготовке. Заседание можно начать снова.');}}
     finishCourt() {const a=this.s.active;if(!a||a.phase!=='court'||a.courtChoice===null)return false;this.resolve(false);return true;}
     resolve(late) {
       const a=this.s.active,c=this.definition;if(!a)return;
@@ -219,8 +219,11 @@
     defend() {
       const p=this.s.investigation;
       if(!p||p.defended||this.s.money<25000||this.s.ending)return this.say('Независимая защита недоступна.',false);
+      const a=this.s.active;
       this.personal('Независимый защитник',-25000);p.defended=true;p.evidence=Math.max(0,p.evidence-25);
-      this.advanceDay();return this.say('Защитник проверил материалы: сила обвинения −25. Прошёл один день.');
+      this.advanceDay();
+      const missed=!!a&&this.s.active!==a&&!!this.s.result?.late;
+      return this.say('Защитник проверил материалы: сила обвинения −25. Прошёл один день.'+(missed?' Слушание пропущено, дело проиграно.':''));
     }
     settleProbe() {
       const p=this.s.investigation;if(!p||this.s.day<p.due)return;

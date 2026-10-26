@@ -321,6 +321,32 @@ test('investigation evidence survives cooling, defense is paid once and pressure
   assert.equal(prison.nextDay(),false);
 });
 
+test('the defender spends the hearing day only with an explicit missed-hearing report',()=>{
+  const openProbe=g=>{g.nextDay();g.nextDay();g.nextDay();g.illegal(22);g.illegal(32);assert.ok(g.s.investigation);};
+  const early=accepted();openProbe(early);
+  assert.match(early.defend().message,/Прошёл один день\.$/);
+  assert.ok(early.s.active,'a defender before the hearing keeps the case');
+  const g=accepted();openProbe(g);
+  while(g.s.day<g.s.active.deadline)g.nextDay();
+  const reply=g.defend();
+  assert.equal(reply.ok,true);
+  assert.equal(g.s.active,null);
+  assert.equal(g.s.result.late,true);
+  assert.match(reply.message,/Слушание пропущено, дело проиграно\./);
+  assert.equal(g.s.notice,reply.message);
+});
+
+test('leaving the courtroom returns to preparation with a fresh notice',()=>{
+  const g=accepted();
+  while(!g.planOpen())g.nextDay();
+  assert.equal(g.beginCourt().ok,true);
+  assert.equal(g.chooseCourt(1),true);
+  g.cancelCourt();
+  assert.equal(g.s.active.phase,'prepare');
+  assert.equal(g.s.active.courtChoice,null);
+  assert.match(g.s.notice,/вернулись к подготовке/);
+});
+
 test('a training result cannot change any saved career resources or records',()=>{
   const g=accepted();prepareGood(g);finish(g);
   g.s.campaignComplete=true;g.s.stage=11;
