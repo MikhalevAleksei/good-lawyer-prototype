@@ -36,8 +36,8 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-focus-qa';fs.mkdirSync(out,{r
   await p.keyboard.press('Escape');await settled(null);
   await p.locator('.phone-wake').click();await settled('phone');
   assert.equal(await p.locator('#room-phone-screen #phone-content').isVisible(),true);
-  await p.locator('[data-order="observe"]').click();
-  await p.locator('[data-phone="bank"]').click();assert.match(await p.locator('.budget-card').innerText(),/8\s*000/);
+  await p.locator('[data-ep-order="cameras"]').click();
+  await p.locator('[data-phone="bank"]').click();assert.match(await p.locator('.budget-card').innerText(),/18\s*000/);
   await p.screenshot({path:out+'/phone.png',fullPage:true});
   // A second selection interrupts the flight and arrives at the latest device.
   await p.evaluate(()=>{document.querySelector('#room-focus-bar [data-room-view="laptop"]').click();document.querySelector('#room-focus-bar [data-room-view="phone"]').click();});

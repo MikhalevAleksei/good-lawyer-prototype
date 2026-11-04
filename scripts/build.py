@@ -8,11 +8,12 @@ assets = root / 'site/assets'
 assets.mkdir(exist_ok=True, parents=True)
 fragment = (root / 'source/interface.html').read_text(encoding='utf-8')
 fragment = fragment.replace('__PORTRAIT__', 'assets/lawyer-portrait.jpg').replace('__VIDEO__', 'assets/court.mp4')
+fragment = fragment.replace('__VERDICT_ACQUIT__', 'assets/media/verdict-acquit.mp4').replace('__VERDICT_GUILTY__', 'assets/media/verdict-guilty.mp4')
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
-for folder in ('models', 'vendor'):
+for folder in ('models', 'vendor', 'images', 'media'):
     target = assets / folder
     target.mkdir(exist_ok=True, parents=True)
     for source in sorted((root / 'source' / folder).rglob('*')):
@@ -35,7 +36,7 @@ for name in ('game.css', 'office.css', 'office.mjs', 'game-webmcp.js', 'cases.js
     fragment = fragment.replace(f'assets/{name}"', f'assets/{name}?v={digest(output)}"')
 fragment = fragment.replace('assets/models/office-preview.png"', 'assets/models/office-preview.png?v='+digest(root/'source/models/office-preview.png')+'"')
 header = '''<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#183c2d"><meta name="description" content="Хороший адвокат: стратегический триллер. Трёхмерный кабинет, десять глав и ваша линия защиты."><title>Хороший адвокат — Северный берег</title></head><body>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a100e"><meta name="description" content="Хороший адвокат. Начало карьеры — стратегический юридический триллер: ночной 3D-кабинет, десять глав и ваша линия защиты."><title>Хороший адвокат. Начало карьеры</title></head><body>
 '''
 (root / 'site/index.html').write_text(header + fragment + '\n</body></html>', encoding='utf-8')
 shutil.copyfile(root / 'source/scenario.html', root / 'site/scenario.html')

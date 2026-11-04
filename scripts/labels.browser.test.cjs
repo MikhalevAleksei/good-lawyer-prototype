@@ -11,6 +11,7 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
   p.on('pageerror',e=>errors.push(e.message));
   await p.goto(base);await p.locator('[data-action="new-game"]').click();
   await p.waitForFunction(()=>OfficeRoom.diagnostics().ready&&OfficeRoom.diagnostics().frames>0);
+  // The pointer that pressed «Новая игра» may rest over the laptop; once it leaves, no caption may remain.
   await p.mouse.move(5,5);
   assert.equal(await p.locator('#room-object-labels [data-object="Desk"],#room-object-labels [data-object="BankersLamp"],#room-object-labels [data-object="Cactus"]').count(),0,'decorative props have no tooltip or keyboard stop');
   assert.equal(await p.locator('#room-object-labels .room-object-label').evaluateAll(es=>es.every(e=>e.matches('button[data-room-view]'))),true,'every tooltip leads to a game action');
@@ -34,7 +35,8 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-labels-qa';fs.mkdirSync(out,{
   await p.mouse.move(viewport.x+viewport.width*.85,viewport.y+viewport.height*.21);
   await p.waitForFunction(()=>document.querySelector('[data-object="CityMap"]').classList.contains('is-visible'));
   await p.mouse.click(viewport.x+viewport.width*.85,viewport.y+viewport.height*.21);
-  assert.match(await p.locator('#desktop-content').innerText(),/Новореченск/i);
+  await p.waitForFunction(()=>OfficeRoom.diagnostics().focus==='map');
+  assert.match(await p.locator('#room-map-screen').innerText(),/Влияние в городе/);
   await p.keyboard.press('Escape');await p.locator('[data-object="FountainPen"]').waitFor({state:'visible'});
   await p.mouse.move(5,5);
   // Keyboard selection reveals the object caption and Enter keeps its original action.

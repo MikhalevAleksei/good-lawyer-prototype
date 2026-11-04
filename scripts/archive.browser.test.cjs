@@ -39,7 +39,7 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-archive-qa';fs.mkdirSync(out,
   // Start a case from the empty archive; a real court result must create the first folder.
   await p.locator('.archive-empty [data-room-view="cases"]').click();await settled('laptop');
   await p.locator('[data-offer="first-signature"]').click();
-  for(let i=0;i<4;i++)await p.locator('[data-action="day"]').click();
+  for(let i=0;i<5;i++)await p.locator('[data-action="day"]').click();
   await p.locator('#court-button').click();await p.locator('[data-court-answer="0"]').click();await p.locator('[data-action="skip"]').click();
   await settled('laptop');assert.equal(await p.evaluate(()=>__archiveTestGame.s.completed.length),1);
   const career=await p.evaluate(()=>JSON.stringify(__archiveTestGame.s));
@@ -47,7 +47,7 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-archive-qa';fs.mkdirSync(out,
   assert.equal(await p.locator('#room-archive-shelves [data-archive-id]').count(),1);
   const folder=p.locator('#room-archive-shelves [data-archive-id="first-signature"]');
   await folder.focus();await folder.press('Enter');
-  assert.equal(await p.locator('#archive-document-title').innerText(),'Чужая подпись');
+  assert.equal(await p.locator('#archive-document-title').innerText(),'Касса в 20:08');
   assert.match(await p.locator('#room-archive-detail').innerText(),/Гонорар:.*12\s*000/);
   assert.equal(await p.evaluate(()=>document.activeElement.id),'archive-document-title');
   await p.screenshot({path:out+'/result-desktop.png',fullPage:true});

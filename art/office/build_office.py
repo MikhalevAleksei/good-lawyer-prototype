@@ -19,6 +19,11 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'source' / 'models'
 OUT.mkdir(parents=True, exist_ok=True)
 random.seed(2041)
+# The back wall with its joinery, the chamfered corner wall and everything that
+# hangs on or stands against them sit BACK_SHIFT metres deeper (+Y) than in the
+# original sketch layout. The desk, chair, devices, camera and live-screen
+# anchors are deliberately not shifted, so the screen contracts stay unchanged.
+BACK_SHIFT=1.2
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 for datablocks in (bpy.data.materials, bpy.data.cameras, bpy.data.lights):
@@ -36,13 +41,22 @@ def material(name, color, rough=.5, metal=0):
     shader.inputs['Metallic'].default_value = metal
     return mat
 
-ivory = material('Warm ivory plaster', (.72,.71,.62), .85)
-trim = material('Ivory joinery', (.56,.59,.48), .6)
-sage = material('Sage wall panels', (.26,.34,.26), .7)
-sage_light = material('Panel inset', (.33,.40,.30), .72)
-wood = material('Dark walnut', (.048,.021,.009), .33)
-wood_light = material('Walnut heartwood', (.085,.039,.015), .38)
-wood_medium = material('Walnut variation', (.065,.029,.011), .36)
+def glow(mat, color, strength):
+    """Add a constant emission that the glTF exporter writes as emissiveFactor."""
+    node = mat.node_tree.nodes.get('Principled BSDF')
+    node.inputs['Emission Color'].default_value = (*color, 1)
+    node.inputs['Emission Strength'].default_value = strength
+    return mat
+
+# Day palette: warm light plaster, deep green panelling, brass mouldings and a
+# medium-dark walnut floor and joinery.
+plaster = material('Warm day plaster', (.50,.48,.42), .86)
+trim = material('Brass panel moulding', (.45,.31,.12), .34, .78)
+sage = material('Deep green wall panels', (.09,.15,.11), .56)
+sage_light = material('Green panel inset', (.11,.18,.13), .6)
+wood = material('Walnut', (.075,.038,.018), .34)
+wood_light = material('Walnut heartwood', (.10,.051,.024), .38)
+wood_medium = material('Walnut variation', (.086,.044,.021), .36)
 brass = material('Aged brushed brass', (.55,.37,.14), .3, .76)
 gold = material('Pen polished gold', (.76,.52,.20), .2, .82)
 black = material('Black lacquer', (.018,.024,.021), .22)
@@ -60,10 +74,17 @@ terracotta = material('Ceramic pot', (.38,.23,.14), .55)
 soil = material('Potting soil', (.042,.035,.023), 1)
 leaf = material('Leaf dark', (.09,.22,.105), .72)
 leaf_light = material('Leaf light', (.19,.34,.14), .66)
-map_bg = material('Map parchment', (.72,.73,.60), .85)
-map_street = material('Map street', (.47,.51,.38), .85)
-map_park = material('Map park', (.27,.40,.27), .85)
-map_river = material('Map river', (.22,.36,.37), .7)
+# Dark navigation map, a design object even by day: teal ground, darker block
+# silhouettes, a turquoise river, thin light streets and five brass district
+# outlines. The faint emission keeps the printed lines crisp.
+map_bg = material('Navigation map ground', (.03,.05,.05), .82)
+map_edge = material('Navigation map board edge', (.016,.026,.026), .8)
+map_block = material('Navigation map blocks', (.052,.08,.078), .78)
+map_street = glow(material('Navigation map streets', (.52,.57,.52), .7), (.62,.68,.6), .2)
+map_river = glow(material('Navigation map river', (.02,.25,.29), .32), (.03,.42,.46), .3)
+map_brass = glow(material('Navigation map brass districts', (.5,.34,.13), .32, .7), (.55,.36,.12), .16)
+phone_screen = glow(material('Phone idle screen', (.03,.07,.052), .3), (.03,.09,.062), .2)
+phone_text = glow(material('Phone screen lettering', (.75,.74,.62), .5), (.78,.76,.6), .4)
 mirror_glass = material('Mirror silver', (.39,.48,.42), .13, .92)
 lamp_glass = material('Banker emerald glass', (.075,.26,.12), .24)
 lamp_glow = material('Warm lamp interior', (1,.75,.37), .4)
@@ -179,21 +200,35 @@ def text(name, body, loc, size, mat, parent=None, rot=(math.pi/2,0,0), align='CE
     return obj
 
 # Open-front room with a chamfered right wall, preserving the sketch's sightlines.
-box('Oak floor foundation',(0,.3,-.12),(12,9,.2),wood,.02)
+# The floor and left wall grow by BACK_SHIFT so the deeper back wall meets them.
+box('Oak floor foundation',(0,.3+BACK_SHIFT/2,-.12),(12,9+BACK_SHIFT,.2),wood,.02)
 for i in range(18):
-    box('Wide oak floorboard %02d'%i,(-5.7+i*.65,.3,.004),(.63,8.9,.026),[wood_medium,wood_light,wood][i%3],.006)
-box('Back plaster wall',(-1.15,4.65,3.1),(9.7,.17,6.2),ivory,.01)
-box('Left plaster wall',(-6,.5,3.1),(.17,8.5,6.2),ivory,.01)
-corner=empty('Chamfered right wall',(4.8,3.72,0),(0,0,math.radians(-38)))
-box('Right wall plaster',(0,0,3.1),(3.65,.17,6.2),ivory,.01,corner)
+    box('Wide oak floorboard %02d'%i,(-5.7+i*.65,.3+BACK_SHIFT/2,.004),(.63,8.9+BACK_SHIFT,.026),[wood_medium,wood_light,wood][i%3],.006)
+BACK_Y=4.65+BACK_SHIFT
+# The window opens in the back wall between the archive and the portrait,
+# over the laptop. From the game camera the laptop lid hides the wall below
+# z~3.76 and the frame's top edge meets the wall at z~5.2, so the window is wide
+# rather than tall: its sill sits on the chair rail, its head casing stays just
+# inside the frame, and its sides keep clear of the archive and the portrait.
+WIN_W,WIN_H=4.2,2.35
+WIN_CX,WIN_Z0=-1.6,2.6
+WIN_X0,WIN_X1,WIN_Z1=WIN_CX-WIN_W/2,WIN_CX+WIN_W/2,WIN_Z0+WIN_H
+WALL_X0,WALL_X1,WALL_H,WALL_T=-6.0,3.7,6.2,.17
+# Four plaster pieces leave an exact opening; unbevelled, so no seam grooves.
+for x0,x1,z0,z1 in [(WALL_X0,WIN_X0,0,WALL_H),(WIN_X1,WALL_X1,0,WALL_H),
+                    (WIN_X0,WIN_X1,0,WIN_Z0),(WIN_X0,WIN_X1,WIN_Z1,WALL_H)]:
+    box('Back plaster wall',((x0+x1)/2,BACK_Y,(z0+z1)/2),(x1-x0,WALL_T,z1-z0),plaster,0)
+box('Left plaster wall',(-6,.5+BACK_SHIFT/2,3.1),(.17,8.5+BACK_SHIFT,6.2),plaster,.01)
+corner=empty('Chamfered right wall',(4.8,3.72+BACK_SHIFT,0),(0,0,math.radians(-38)))
+box('Right wall plaster',(0,0,3.1),(3.65,.17,6.2),plaster,.01,corner)
 for i in range(8):
     x=-5.42+i*1.2
-    box('Back sage panel %02d'%i,(x,4.53,1.26),(1.15,.055,2.44),sage,.012)
-    box('Back inset %02d'%i,(x,4.484,1.27),(.91,.04,1.95),sage_light,.012)
-    for sx in [-.47,.47]:box('Panel vertical trim',(x+sx,4.45,1.27),(.025,.022,2.02),trim,.004)
-    for sz in [.24,2.3]:box('Panel horizontal trim',(x,4.45,sz),(.96,.022,.025),trim,.004)
-box('Continuous walnut chair rail',(-1.1,4.42,2.55),(9.7,.11,.09),wood,.018)
-box('Walnut skirting',(-1.1,4.42,.13),(9.7,.12,.23),wood,.015)
+    box('Back sage panel %02d'%i,(x,BACK_Y-.12,1.26),(1.15,.055,2.44),sage,.012)
+    box('Back inset %02d'%i,(x,BACK_Y-.166,1.27),(.91,.04,1.95),sage_light,.012)
+    for sx in [-.47,.47]:box('Panel vertical trim',(x+sx,BACK_Y-.2,1.27),(.025,.022,2.02),trim,.004)
+    for sz in [.24,2.3]:box('Panel horizontal trim',(x,BACK_Y-.2,sz),(.96,.022,.025),trim,.004)
+box('Continuous walnut chair rail',(-1.1,BACK_Y-.23,2.55),(9.7,.11,.09),wood,.018)
+box('Walnut skirting',(-1.1,BACK_Y-.23,.13),(9.7,.12,.23),wood,.015)
 for i in range(3):
     x=-1.2+i*1.2
     box('Corner sage panel',(x,-.115,1.26),(1.15,.05,2.44),sage,.015,corner)
@@ -201,16 +236,72 @@ for i in range(3):
 box('Corner chair rail',(0,-.17,2.55),(3.6,.12,.09),wood,.015,corner)
 box('Corner skirting',(0,-.17,.13),(3.6,.12,.23),wood,.015,corner)
 
-# A left-side window provides a credible origin for the broad, soft light.
-window=empty('Window',(-5.86,-.7,3.6),(0,0,math.pi/2))
-box('Window dark reveal',(0,0,0),(2.75,.1,3.4),wood,.04,window)
-box('Window bright pane',(0,-.06,0),(2.55,.025,3.2),paper,.02,window)
-for x in [-1.31,0,1.31]:box('Window vertical mullion',(x,-.1,0),(.055,.06,3.28),trim,.008,window)
-for z in [-1.64,0,1.64]:box('Window horizontal mullion',(0,-.1,z),(2.68,.06,.055),trim,.008,window)
-box('Window sill',(0,-.2,-1.71),(2.98,.46,.11),paper,.025,window)
+# The back-wall window looks out on a sunlit city street. Behind the opening an
+# emissive picture plane, larger than the opening, closes the view without gaps;
+# walnut linings, casing, mullions and sill frame it, with clear, light glass.
+# Root origin: centre of the opening on the wall's room face; local -Y faces the room.
+window=empty('Window',(WIN_CX,BACK_Y-WALL_T/2,WIN_Z0+WIN_H/2))
+hw,hh=WIN_W/2,WIN_H/2
+for side in (-1,1):
+    box('Window jamb lining',(side*(hw-.02),WALL_T/2,0),(.04,WALL_T+.004,WIN_H),wood,0,window)
+    # Side casings stop under the head casing, so the two never overlap.
+    box('Window casing',(side*(hw+.06),-.035,-.03),(.16,.07,WIN_H+.1),wood,.012,window)
+for z in (-hh+.02,hh-.02):
+    box('Window head and sill lining',(0,WALL_T/2,z),(WIN_W,WALL_T+.004,.04),wood,0,window)
+box('Window casing head',(0,-.035,hh+.1),(WIN_W+.44,.07,.16),wood,.012,window)
+box('Window sill',(0,-.11,-hh-.04),(WIN_W+.5,.3,.08),wood,.02,window)
+WINDOW_VIEW_PATH=ROOT/'art/office/window-day.jpg'
+WINDOW_VIEW_STRENGTH=1.2
+WINDOW_VIEW_CENTER_U=.5
+VIEW_W,VIEW_H,VIEW_Y=WIN_W+.6,WIN_H+.6,WALL_T+.02
+window_view=material('Window day city view',(0,0,0),.9)
+window_view_info={'image':None,'emissionStrength':WINDOW_VIEW_STRENGTH}
+pane=plane('Window city view',(0,VIEW_Y,0),(VIEW_W,VIEW_H),window_view,window)
+if WINDOW_VIEW_PATH.exists():
+    view_image=bpy.data.images.load(str(WINDOW_VIEW_PATH))
+    view_image.pack()
+    nt=window_view.node_tree
+    view_tex=nt.nodes.new('ShaderNodeTexImage');view_tex.image=view_image
+    view_tex.extension='EXTEND'
+    shader=nt.nodes.get('Principled BSDF')
+    nt.links.new(view_tex.outputs['Color'],shader.inputs['Emission Color'])
+    shader.inputs['Emission Strength'].default_value=WINDOW_VIEW_STRENGTH
+    # Crop the picture to the view plane without stretching it: a wider image
+    # keeps its full height and a slice around WINDOW_VIEW_CENTER_U; a narrower
+    # image keeps its full width and a centred band of its height.
+    pane_aspect=VIEW_W/VIEW_H
+    image_aspect=view_image.size[0]/max(view_image.size[1],1)
+    view_width,view_height=(pane_aspect/image_aspect,1) if image_aspect>=pane_aspect else (1,image_aspect/pane_aspect)
+    view_left=min(max(WINDOW_VIEW_CENTER_U-view_width/2,0),1-view_width)
+    view_bottom=(1-view_height)/2
+    for uv in pane.data.uv_layers.active.data:
+        uv.uv=(view_left+uv.uv[0]*view_width,view_bottom+uv.uv[1]*view_height)
+    window_view_info={'image':'art/office/'+WINDOW_VIEW_PATH.name,'size':list(view_image.size),
+        'uvCrop':[round(view_left,4),round(view_bottom,4),round(view_left+view_width,4),round(view_bottom+view_height,4)],
+        'emissionStrength':WINDOW_VIEW_STRENGTH}
+else:
+    # Procedural fallback: a clear daytime sky over pale house silhouettes.
+    window_view_info={'image':None,'procedural':True,'emissionStrength':1.1}
+    glow(window_view,(.22,.42,.78),1.1)
+    city_rng=random.Random(77)
+    facade=glow(material('Window procedural facade',(0,0,0),.9),(.5,.4,.29),1.0)
+    facade_far=glow(material('Window procedural far facade',(0,0,0),.9),(.36,.42,.52),1.0)
+    x=-VIEW_W/2
+    while x<VIEW_W/2:
+        width=city_rng.uniform(.35,.8);height=city_rng.uniform(.6,1.9)
+        far=city_rng.random()<.4
+        box('Window procedural house',(x+width/2,VIEW_Y-(.003 if far else .006),-VIEW_H/2+height/2),
+            (width-.02,.002,height),facade_far if far else facade,0,window)
+        x+=width
+glass=material('Window clear glass',(.78,.82,.84),.03)
+glass_shader=glass.node_tree.nodes.get('Principled BSDF')
+glass_shader.inputs['Alpha'].default_value=.08
+glass.surface_render_method='BLENDED'
+plane('Window glass',(0,.125,0),(WIN_W-.08,WIN_H-.08),glass,window)
+for x in (-WIN_W/6,WIN_W/6):box('Window vertical mullion',(x,.075,0),(.065,.07,WIN_H-.06),wood,.008,window)
 
 # Archive: individual books, actual shelves, closed lower doors and brass handles.
-shelf=empty('Bookshelf',(-4.98,3.9,0))
+shelf=empty('Bookshelf',(-4.98,3.9+BACK_SHIFT,0))
 box('Archive back',(0,.24,2.35),(1.86,.13,4.5),wood,.035,shelf)
 for x in [-.94,.94]:box('Archive upright',(x,0,2.35),(.12,.64,4.62),wood_light,.025,shelf)
 for z in [.15,1.1,2.12,3.15,4.58]:box('Archive shelf',(0,-.03,z),(2.0,.72,.12),wood_light,.025,shelf)
@@ -324,10 +415,10 @@ sphere('Lamp pull bead',(.32,-.18,.73),(.021,.021,.035),brass,lamp)
 phone=empty('Phone',(3.75,-1.69,1.46),(math.radians(-23),math.radians(-6),math.radians(-12)))
 box('Phone metal chassis',(0,0,.86),(.87,.115,1.72),aluminium,.085,phone)
 box('Phone black front',(0,-.065,.86),(.83,.026,1.67),black,.075,phone)
-box('Phone sage screen',(0,-.083,.86),(.72,.012,1.49),sage_light,.052,phone)
+box('Phone sage screen',(0,-.083,.86),(.72,.012,1.49),phone_screen,.052,phone)
 box('Phone speaker',(0,-.094,1.525),(.16,.009,.025),black,.01,phone)
-text('Phone line title','LINE',(0,-.101,1.34),.073,paper,phone)
-text('Phone connection status','ONLINE',(0,-.101,1.08),.12,paper,phone)
+text('Phone line title','LINE',(0,-.101,1.34),.073,phone_text,phone)
+text('Phone connection status','ONLINE',(0,-.101,1.08),.12,phone_text,phone)
 box('Phone bank card',(0,-.101,.78),(.57,.012,.26),green_folder,.025,phone)
 for i in range(3):
     box('Phone transaction line',(-.04,-.104,.49-i*.12),(.42,.009,.016),paper_shadow,.003,phone)
@@ -464,7 +555,7 @@ if tripo_path.exists():
         tripo_info['importError']=str(exc)
         print('TRIPO_CHAIR_FALLBACK',str(exc))
 
-profile=empty('Lawyer',(1.99,4.26,3.47))
+profile=empty('Lawyer',(1.99,4.26+BACK_SHIFT,3.47))
 box('Lawyer portrait walnut frame',(0,0,0),(1.38,.12,1.79),wood,.035,profile)
 box('Lawyer portrait brass inner frame',(0,-.078,0),(1.23,.025,1.64),brass,.016,profile)
 box('Lawyer portrait cream mat',(0,-.097,0),(1.17,.018,1.58),paper,.005,profile)
@@ -480,24 +571,101 @@ plane('Lawyer portrait photograph',(0,-.112,.035),(.94,1.28),photo_mat,profile)
 box('Profile name plaque',(0,-.115,-.71),(.91,.018,.14),brass,.01,profile)
 text('Profile plaque letters','PRIVATE PRACTICE',(0,-.129,-.71),.052,wood,profile)
 
-# Framed city map on the right wall: relief blocks, river, roads and district pins.
-citymap=empty('CityMap',(4.45,3.8,3.68),(0,0,math.radians(-38)))
+# Framed dark navigation map on the chamfered wall. Everything on the map is
+# flat and stays within 3 cm of the parchment, which remains one separate, flat,
+# unmerged rectangle ('City map parchment', 2.38 x 1.67, facing the room) so the
+# game can lay a live HTML map over its exact bounds.
+MAP_W,MAP_H=2.38,1.67
+MAP_FACE=-.097
+def flat_mesh(name, verts, faces, mat, parent, loc=(0,0,0)):
+    # Faces are wound to face local -Y, the room side of every wall group.
+    oriented=[]
+    for face in faces:
+        a,b,c=(Vector(verts[i]) for i in face[:3])
+        oriented.append(tuple(reversed(face)) if (b-a).cross(c-a).y>0 else tuple(face))
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],oriented);mesh.materials.append(mat)
+    obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
+    obj.parent=parent;obj.location=loc
+    return obj
+def flat_path(name, points, width, depth, mat, parent, closed=False):
+    """A flat ribbon through (x, z) points in the parent's wall plane."""
+    pts=[Vector(p) for p in points];n=len(pts);verts=[]
+    for i,p in enumerate(pts):
+        prev=pts[i-1] if closed or i else None
+        nxt=pts[(i+1)%n] if closed or i<n-1 else None
+        d_in=(p-prev).normalized() if prev is not None else None
+        d_out=(nxt-p).normalized() if nxt is not None else None
+        d_in=d_in if d_in is not None else d_out
+        d_out=d_out if d_out is not None else d_in
+        tangent=(d_in+d_out);tangent=tangent.normalized() if tangent.length>1e-6 else d_out
+        normal=Vector((-tangent.y,tangent.x))
+        miter=1/max(.4,normal.dot(Vector((-d_out.y,d_out.x))))
+        for side in (1,-1):
+            q=p+normal*side*width/2*miter
+            verts.append((q.x,depth,q.y))
+    faces=[(2*i,2*((i+1)%n),2*((i+1)%n)+1,2*i+1) for i in range(n if closed else n-1)]
+    return flat_mesh(name,verts,faces,mat,parent)
+def flat_rects(name, rects, depth, mat, parent):
+    verts=[];faces=[]
+    for cx,cz,w,h in rects:
+        base=len(verts)
+        verts+=[(cx-w/2,depth,cz-h/2),(cx+w/2,depth,cz-h/2),(cx+w/2,depth,cz+h/2),(cx-w/2,depth,cz+h/2)]
+        faces.append((base,base+1,base+2,base+3))
+    return flat_mesh(name,verts,faces,mat,parent)
+def distance_to_path(point, path):
+    best=9
+    for a,b in zip(path,path[1:]):
+        a,b,p=Vector(a),Vector(b),Vector(point)
+        t=max(0,min(1,(p-a).dot(b-a)/max((b-a).length_squared,1e-9)))
+        best=min(best,(a+(b-a)*t-p).length)
+    return best
+
+citymap=empty('CityMap',(4.45,3.8+BACK_SHIFT,3.68),(0,0,math.radians(-38)))
 box('City map walnut frame',(0,0,0),(2.62,.11,1.9),wood,.035,citymap)
 box('City map brass reveal',(0,-.067,0),(2.48,.026,1.77),brass,.018,citymap)
-box('City map parchment',(0,-.088,0),(2.38,.018,1.67),map_bg,.012,citymap)
-for row in range(5):
-    for col in range(7):
-        xx=-1.02+col*.33;zz=-.59+row*.25
-        if abs(xx-(.18*math.sin(zz*4)))<.23:continue
-        box('Map city block',(xx,-.105,zz),(.22,.016,.15),map_park if (row+col)%4==0 else sage_light,.015,citymap)
-riverpts=[(-.28,-.125,-.78),(-.13,-.125,-.6),(.09,-.125,-.37),(.02,-.125,-.14),(.14,-.125,.11),(.08,-.125,.34),(.28,-.125,.6),(.24,-.125,.77)]
-line('Map river',riverpts,.068,map_river,citymap)
-for z in [-.45,.05,.55]:line('Map east west road',[(-1.12,-.13,z),(1.12,-.13,z+.04)],.013,paper,citymap)
-for x in [-.83,-.5,.51,.84]:line('Map north south road',[(x,-.132,-.72),(x+.06,-.132,.71)],.011,paper,citymap)
-for x,z in [(-.74,-.31),(-.52,.4),(.5,-.39),(.83,.4),(.47,.18)]:
-    cylinder('Map district pin',(x,-.155,z),.038,.03,brass,citymap,16,(math.pi/2,0,0))
-    sphere('Map pin cap',(x,-.18,z),(.026,.014,.026),burgundy,citymap,12,6)
-text('Map city title','NOVORECHENSK',(0,-.14,.748),.075,wood,citymap)
+box('City map board edge',(0,-.087,0),(MAP_W,.014,MAP_H),map_edge,.004,citymap)
+parchment=flat_mesh('City map parchment',
+    [(-MAP_W/2,0,-MAP_H/2),(MAP_W/2,0,-MAP_H/2),(MAP_W/2,0,MAP_H/2),(-MAP_W/2,0,MAP_H/2)],
+    [(0,1,2,3)],map_bg,citymap,(0,MAP_FACE,0))
+parchment_uv=parchment.data.uv_layers.new(name='UVMap')
+for loop,uv in zip(parchment.data.loops,parchment_uv.data):
+    co=parchment.data.vertices[loop.vertex_index].co
+    uv.uv=(co.x/MAP_W+.5,co.z/MAP_H+.5)
+# The river ends on the brass neatline so its ribbon never overhangs the parchment.
+map_river_path=[(-.4,-.8),(-.25,-.6),(.02,-.42),(-.02,-.18),(.12,.02),(.4,.12),(.75,.1),(1.15,.2)]
+map_streets_ew=[-.6,-.3,.0,.3,.58]
+map_streets_ns=[-.86,-.56,-.26,.06,.38,.68,.96]
+map_rng=random.Random(2077)
+blocks=[]
+xs=[-1.13]+map_streets_ns+[1.13];zs=[-.78]+map_streets_ew+[.66]
+for x0,x1 in zip(xs,xs[1:]):
+    for z0,z1 in zip(zs,zs[1:]):
+        cx,cz,w,h=(x0+x1)/2,(z0+z1)/2,x1-x0-.06,z1-z0-.06
+        if w<.05 or h<.05 or distance_to_path((cx,cz),map_river_path)<.16:continue
+        if map_rng.random()<.45:
+            left,right=cx-w/2,cx+w/2;cut=left+w*map_rng.uniform(.38,.62)
+            blocks.append(((left+cut-.018)/2,cz,cut-.018-left,h))
+            blocks.append(((cut+.018+right)/2,cz,right-cut-.018,h))
+        else:blocks.append((cx,cz,w,h))
+flat_rects('Map dark city blocks',blocks,MAP_FACE-.002,map_block,citymap)
+flat_path('Map river',map_river_path,.095,MAP_FACE-.004,map_river,citymap)
+for z in map_streets_ew:flat_path('Map east west street',[(-1.13,z),(1.13,z+.02)],.011,MAP_FACE-.006,map_street,citymap)
+for x in map_streets_ns:flat_path('Map north south street',[(x,-.78),(x+.03,.66)],.01,MAP_FACE-.006,map_street,citymap)
+flat_path('Map diagonal avenue',[(-1.13,-.74),(-.2,.05),(.38,.62)],.013,MAP_FACE-.006,map_street,citymap)
+flat_path('Map brass neatline',[(-1.15,-.8),(1.15,-.8),(1.15,.8),(-1.15,.8)],.007,MAP_FACE-.008,map_brass,citymap,closed=True)
+# Five districts: Hill, Suburb, River district, Business quarter, Old port.
+map_districts=[
+    [(-1.1,.63),(-.38,.63),(-.32,.36),(-.66,.27),(-1.1,.34)],
+    [(-1.1,-.76),(-.56,-.76),(-.4,-.4),(-.74,-.2),(-1.1,-.26)],
+    [(-.3,-.5),(.16,-.55),(.3,-.1),(.15,.3),(-.25,.24)],
+    [(.27,.63),(1.1,.63),(1.1,.38),(.7,.3),(.32,.34)],
+    [(.46,-.06),(1.1,-.02),(1.1,-.74),(.56,-.74),(.36,-.36)]]
+for points in map_districts:
+    flat_path('Map brass district outline',points,.012,MAP_FACE-.01,map_brass,citymap,closed=True)
+    x=sum(p[0] for p in points)/len(points);z=sum(p[1] for p in points)/len(points)
+    cylinder('Map district pin',(x,MAP_FACE-.008,z),.026,.012,brass,citymap,16,(math.pi/2,0,0))
+    sphere('Map pin cap',(x,MAP_FACE-.017,z),(.016,.006,.016),burgundy,citymap,12,6)
+text('Map city title','NOVORECHENSK',(0,MAP_FACE-.002,.735),.06,map_brass,citymap)
 
 # Plant and personal desk objects add scale and lived-in character.
 plant=empty('Cactus',(3.68,.63,1.43))
@@ -523,8 +691,30 @@ for i in range(2):
 # source object's transforms are baked into vertices before slot normalization,
 # so the established UI roots retain their exact transforms and unit scale.
 tripo_assets=[]
+def tint_base_color(mat, tint):
+    """Multiply a material's base colour by a constant RGB tone.
+
+    A textured base colour gets a Mix (Multiply, factor 1) node in front of the
+    Principled BSDF; Blender's glTF exporter writes that constant as the
+    material's baseColorFactor, so the tone survives export without a new image.
+    """
+    nt=mat.node_tree
+    for shader_node in [n for n in nt.nodes if n.type=='BSDF_PRINCIPLED']:
+        socket=shader_node.inputs['Base Color']
+        if not socket.links:
+            socket.default_value=(*(c*t for c,t in zip(socket.default_value[:3],tint)),socket.default_value[3])
+            continue
+        source=socket.links[0].from_socket
+        mix=nt.nodes.new('ShaderNodeMix');mix.name=mix.label='Walnut tone'
+        mix.data_type='RGBA';mix.blend_type='MULTIPLY';mix.clamp_result=False
+        mix.inputs['Factor'].default_value=1
+        color_a,color_b=[s for s in mix.inputs if s.type=='RGBA']
+        color_b.default_value=(*tint,1)
+        nt.links.new(source,color_a)
+        nt.links.new([s for s in mix.outputs if s.type=='RGBA'][0],socket)
+
 def replace_with_tripo(key, root, target_min, target_max, keep_names=(),
-                       metallic=.04, roughness=.58, normal=.28, rotation_z=0):
+                       metallic=.04, roughness=.58, normal=.28, rotation_z=0, tint=None):
     path=ROOT/'art'/'office'/('tripo-'+key+'.glb')
     if not path.exists():
         print('TRIPO_ASSET_NATIVE_FALLBACK',key,flush=True)
@@ -580,6 +770,8 @@ def replace_with_tripo(key, root, target_min, target_max, keep_names=(),
             if not mat:continue
             if not mat.name.startswith('Tripo '+key+' / '):mat.name='Tripo '+key+' / '+mat.name
             if not mat.use_nodes:continue
+            if tint and not mat.get('walnutTone'):
+                tint_base_color(mat,tint);mat['walnutTone']=list(tint)
             for shader_node in mat.node_tree.nodes:
                 if shader_node.type=='BSDF_PRINCIPLED':
                     for socket_name,value in [('Metallic',metallic),('Roughness',roughness)]:
@@ -623,13 +815,18 @@ def replace_with_tripo(key, root, target_min, target_max, keep_names=(),
         'placementBounds':{'min':list(target_min),'max':list(target_max),'space':'Blender parent-local Z-up'},
         'nativeScreenFinishing':key in {'laptop','phone'},
         'normalsRecomputedAfterFitting':True,
-        'materialAdjustment':{'metallic':metallic,'roughness':roughness,'normalStrength':normal}
+        'materialAdjustment':{'metallic':metallic,'roughness':roughness,'normalStrength':normal,
+                              'baseColorTint':list(tint) if tint else None}
     }
     tripo_assets.append(report)
     print('TRIPO_ASSET_IMPORTED',json.dumps(report),flush=True)
 
-replace_with_tripo('desk',desk,(-5.025,-2.36,0),(5.025,1.42,1.425),roughness=.48)
-replace_with_tripo('archive',shelf,(-1,-.39,0),(1,.33,4.7),roughness=.56)
+# The generated desk and archive textures are orange; a constant multiply turns
+# them into noble walnut while the source GLBs stay untouched.
+DESK_TINT=(.32,.58,1.0)
+ARCHIVE_TINT=(.28,.42,.70)
+replace_with_tripo('desk',desk,(-5.025,-2.36,0),(5.025,1.42,1.425),roughness=.48,tint=DESK_TINT)
+replace_with_tripo('archive',shelf,(-1,-.39,0),(1,.33,4.7),roughness=.56,tint=ARCHIVE_TINT)
 replace_with_tripo('lamp',lamp,(-.55,-.29,0),(.55,.29,1.25),metallic=.42,roughness=.32,normal=.20)
 for asset in tripo_assets:
     if asset['id']=='lamp':
@@ -669,25 +866,44 @@ camera.data.type='PERSP';camera.data.lens=44.5;camera.data.sensor_width=36
 camera.data.clip_start=.05;camera.data.clip_end=100
 bpy.context.scene.camera=camera
 
-def area(name,loc,target,power,color,size):
-    bpy.ops.object.light_add(type='AREA',location=loc)
-    obj=bpy.context.object;obj.name=name;obj.data.energy=power;obj.data.color=color;obj.data.shape='DISK';obj.data.size=size
-    obj.rotation_euler=(Vector(target)-obj.location).to_track_quat('-Z','Y').to_euler()
-area('Window softbox',(-4.9,-2.5,6.2),(-.5,1,1.8),1150,(1,.88,.68),5)
-area('Ceiling bounce',(1,-.2,6.8),(0,1,0),650,(1,.96,.84),5)
-area('Camera soft fill',(1,-8,4.7),(0,2,2),300,(.76,.86,1),6)
-area('Warm rear rim',(3,3.5,5.9),(1,0,1.5),350,(1,.78,.48),3)
-# Exportable, deliberately low-intensity lights support viewers without a custom rig.
-bpy.ops.object.light_add(type='SUN',location=(-5,-4,7))
-sun=bpy.context.object;sun.name='Office daylight';sun.data.energy=.55;sun.data.angle=math.radians(18)
-sun.rotation_euler=(math.radians(28),math.radians(-25),math.radians(-25))
+# Day: sun through the back window, soft daylight from the window and the open
+# side of the set, a bright warm sky, soft shadows and no black corners. The
+# lamp is off. These lights only shape the Cycles fallback preview; they are
+# not exported (the game lights the scene itself).
+# The idle laptop face glows faintly; the live HTML screen covers it in the game.
+glow(screen,(.03,.09,.065),.22)
+
+def light(kind,name,loc,target,power,color,size=.1,spot=None):
+    bpy.ops.object.light_add(type=kind,location=loc)
+    obj=bpy.context.object;obj.name=name;obj.data.energy=power;obj.data.color=color
+    if kind=='AREA':obj.data.shape='RECTANGLE';obj.data.size,obj.data.size_y=size
+    elif kind in {'POINT','SPOT'}:obj.data.shadow_soft_size=size
+    if kind=='SPOT':obj.data.spot_size=math.radians(spot);obj.data.spot_blend=.65
+    obj.visible_camera=False
+    if target:obj.rotation_euler=(Vector(target)-obj.location).to_track_quat('-Z','Y').to_euler()
+    return obj
+WIN_CENTER=Vector((WIN_CX,BACK_Y-WALL_T/2,WIN_Z0+WIN_H/2))
+# Direction the sunlight travels: from behind the back wall, high and from the
+# left, so it falls through the window across the desk.
+SUN_DIRECTION=Vector((.38,-.72,-.58)).normalized()
+SUN_COLOR=(1,.93,.82);SUN_STRENGTH=3.2;SUN_ANGLE=math.radians(4)
+bpy.ops.object.light_add(type='SUN',location=tuple(WIN_CENTER+Vector((0,6,6))))
+sun=bpy.context.object;sun.name='Day sun';sun.data.energy=SUN_STRENGTH;sun.data.color=SUN_COLOR
+sun.data.angle=SUN_ANGLE;sun.rotation_euler=SUN_DIRECTION.to_track_quat('-Z','Y').to_euler()
+sun.visible_camera=False
+DAYLIGHT=(1,.97,.92)
+light('AREA','Window daylight',tuple(WIN_CENTER-Vector((0,.3,0))),(WIN_CX,-3,1.6),700,DAYLIGHT,(WIN_W-.2,WIN_H-.2))
+light('AREA','Ceiling bounce',(0,1.2,7.2),(0,1.2,0),700,(1,.95,.86),(9,7))
+light('AREA','Open side daylight',(1,-8.5,5.6),(0,2,2.4),420,(.95,.97,1),(7,5))
+light('AREA','Warm wall bounce',(-5.6,1.5,3.2),(2,1.5,2.4),180,(1,.88,.72),(4,3))
 scene=bpy.context.scene
-scene.world.color=(.32,.36,.28)
+WORLD_COLOR=(.62,.57,.48)
+scene.world.color=WORLD_COLOR
 scene.world.use_nodes=True
-scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.52,.56,.46,1)
-scene.world.node_tree.nodes['Background'].inputs[1].default_value=.35
+scene.world.node_tree.nodes['Background'].inputs[0].default_value=(*WORLD_COLOR,1)
+scene.world.node_tree.nodes['Background'].inputs[1].default_value=.5
 scene.render.engine='CYCLES'
-scene.cycles.samples=48
+scene.cycles.samples=96
 scene.cycles.use_denoising=True
 scene.cycles.device='CPU'
 scene.render.resolution_x=1440;scene.render.resolution_y=850;scene.render.resolution_percentage=100
@@ -695,7 +911,7 @@ scene.render.image_settings.file_format='PNG'
 scene.render.film_transparent=False
 scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast'
-scene.view_settings.exposure=-.1
+scene.view_settings.exposure=-.35
 scene.render.filepath=str(OUT/'office-preview.png')
 
 # Merge by interactive ancestor and material: preserve named hit targets while
@@ -703,9 +919,11 @@ scene.render.filepath=str(OUT/'office-preview.png')
 interactive=['Laptop','ScreenAnchor','Phone','FolderCurrent','FolderArchive','FountainPen','Bookshelf','Mirror','CityMap','Lawyer','Desk','BankersLamp','Cactus','TripoChair']
 protected_roots=interactive
 bpy.context.view_layer.update()
+# The map parchment stays a separate, named, flat node for the live HTML map.
+STANDALONE_MESHES={'City map parchment'}
 batches={}
 for obj in list(scene.objects):
-    if obj.type!='MESH':continue
+    if obj.type!='MESH' or obj.name in STANDALONE_MESHES:continue
     ancestor=obj.parent
     while ancestor and ancestor.name not in protected_roots:ancestor=ancestor.parent
     mat=obj.data.materials[0] if obj.data.materials else None
@@ -729,6 +947,29 @@ for obj in list(scene.objects):
         obj.data.calc_loop_triangles()
 triangles=sum(len(o.data.loop_triangles) for o in scene.objects if o.type=='MESH')
 to_gltf=lambda xyz:[xyz[0],xyz[2],-xyz[1]]
+rounded=lambda values:[round(v,4) for v in values]
+parchment=bpy.data.objects['City map parchment']
+city_map_surface={
+    'object':'City map parchment','threeName':'City_map_parchment','parent':'CityMap',
+    'position':rounded(to_gltf(parchment.location)),'width':MAP_W,'height':MAP_H,
+    'localPlane':'XY','normal':[0,0,1],
+    'worldCorners':[rounded(to_gltf(parchment.matrix_world@v.co)) for v in parchment.data.vertices],
+    'note':'Flat unmerged quad; map details stay within 0.03 m in front of it.'}
+day_lighting={
+    'exportedLights':[],
+    'note':'The GLB carries no punctual lights; the Cycles preview lights are listed as hints for the runtime rig. sunDirection is the direction the light travels.',
+    'sunDirection':rounded(to_gltf(SUN_DIRECTION)),'sunColor':list(SUN_COLOR),'sunStrength':SUN_STRENGTH,
+    'windowCenter':rounded(to_gltf(WIN_CENTER)),'windowSize':[WIN_W,WIN_H],'windowNormal':[0,0,1],
+    'windowColor':list(DAYLIGHT),'skyColor':list(WORLD_COLOR),'lamp':'off'}
+emissive_materials=[]
+for mat in sorted({m for o in scene.objects if o.type=='MESH' for m in o.data.materials if m and m.use_nodes},key=lambda m:m.name):
+    node=mat.node_tree.nodes.get('Principled BSDF')
+    if not node:continue
+    strength=node.inputs['Emission Strength'].default_value
+    color=node.inputs['Emission Color']
+    if strength>0 and (color.links or max(color.default_value[:3])>0):
+        emissive_materials.append({'material':mat.name,'strength':round(strength,3),
+            'color':'texture' if color.links else rounded(color.default_value[:3])})
 manifest={
     'generator':'Blender 4.5.14',
     'source':'Authored Blender room, folders, fountain pen and interaction surfaces; user office sketch reference; existing project portrait texture. Versioned Tripo Studio assets are optimized and fitted in Blender; see tripo and tripoAssets for actual import provenance.',
@@ -746,16 +987,21 @@ manifest={
     'labelAnchors':{
         'Laptop':to_gltf((SX,SY,4.48)), 'Phone':to_gltf((3.78,-1.5,3.28)),
         'FolderCurrent':to_gltf((1.75,-1.1,1.9)), 'FolderArchive':to_gltf((2.5,-.26,1.9)),
-        'FountainPen':to_gltf((1.95,-1.96,1.75)), 'Bookshelf':to_gltf((-4.98,3.5,4.9)),
+        'FountainPen':to_gltf((1.95,-1.96,1.75)), 'Bookshelf':to_gltf((-4.98,3.5+BACK_SHIFT,4.9)),
         'Desk':to_gltf((0,-2.3,1.35)), 'BankersLamp':to_gltf((-4.6,.33,2.75)),
         'Cactus':to_gltf((3.68,.63,3.1)), 'TripoChair':to_gltf((1.93,1.68,3.05)),
-        'Mirror':to_gltf((-5.7,2.2,4.7)), 'CityMap':to_gltf((4.4,3.5,4.9)), 'Lawyer':to_gltf((1.99,3.9,4.56))
-    }
+        'Mirror':to_gltf((-5.7,2.2,4.7)), 'CityMap':to_gltf((4.4,3.5+BACK_SHIFT,4.9)), 'Lawyer':to_gltf((1.99,3.9+BACK_SHIFT,4.56))
+    },
+    'backShift':BACK_SHIFT,
+    'cityMapSurface':city_map_surface,
+    'windowView':window_view_info,
+    'dayLighting':day_lighting,
+    'emissiveMaterials':emissive_materials
 }
 (OUT/'office-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'office.blend'))
-bpy.ops.export_scene.gltf(filepath=str(OUT/'office.glb'),export_format='GLB',export_cameras=True,export_lights=True,export_yup=True,export_apply=True,export_materials='EXPORT',export_texcoords=True,export_normals=True,export_animations=False,export_extras=True)
+bpy.ops.export_scene.gltf(filepath=str(OUT/'office.glb'),export_format='GLB',export_cameras=True,export_lights=False,export_yup=True,export_apply=True,export_materials='EXPORT',export_texcoords=True,export_normals=True,export_animations=False,export_extras=True)
 # Blender converts mesh local coordinates to Y-up; an empty has no geometry to
 # convert. CSS3D's own local XY plane therefore needs the corresponding basis
 # correction. Keep the authored Blender empty at X=90 degrees, while the exported

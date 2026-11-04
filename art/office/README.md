@@ -18,10 +18,10 @@ Outputs are `source/models/office.blend`, `office.glb`, `office-manifest.json`, 
 
 | Canonical input | Interactive group | Placement |
 | --- | --- | --- |
-| `tripo-desk.glb` | `Desk` | Wide walnut desk; the separate leather desk pad is preserved. |
+| `tripo-desk.glb` | `Desk` | Wide walnut desk, toned to noble walnut in Blender; the separate leather desk pad is preserved. |
 | `tripo-laptop.glb` | `Laptop` | Generated casing with a Blender-finished work deck, individual keys, trackpad, trim and planar screen. |
 | `tripo-lamp.glb` | `BankersLamp` | Emerald and brass banker's lamp to the left of the laptop. |
-| `tripo-archive.glb` | `Bookshelf` | Archive cabinet in the existing left-wall slot. |
+| `tripo-archive.glb` | `Bookshelf` | Archive cabinet in the back-left corner, toned to noble walnut in Blender. |
 | `tripo-phone.glb` | `Phone` | Generated device body, with a clean Blender-finished portrait screen. |
 | `tripo-cactus.glb` | `Cactus` | Small potted cactus behind the phone. |
 | `tripo-chair.glb` | `TripoChair` | Existing tufted green leather chair, retained in its approved pose. |
@@ -29,6 +29,16 @@ Outputs are `source/models/office.blend`, `office.glb`, `office-manifest.json`, 
 Each generated model has a prompt and a JSON provenance record identifying the actual Tripo service/model, generation ID, original download SHA-256, optimized SHA-256, geometry counts, texture dimensions and optimization date. The lamp's generated mesh is refinished with brass and calm dark green enamel to remove purple and blue artifacts in its original texture; the canonical Tripo input still retains the original generated PBR images. The scene manifest's `tripoAssets` array includes the six new models only after successful import. The existing chair retains its separate `tripo` record for compatibility.
 
 The room, wall panels, framed map, mirror, folders, desk pad, fountain pen, portrait frame and small desk accessories are original procedural Blender geometry. The two folders remain separate objects with papers, labels and clasps. The unbranded fountain pen has black lacquer, a gold nib and trim, and a separate cap. The lawyer portrait uses the pre-existing game image.
+
+## Day look
+
+The scene is a lawyer's office by day: warm light plaster, deep green panelling with brass mouldings, a medium-dark walnut floor and a bright, warm world. `BACK_SHIFT` (1.2 m) at the top of `build_office.py` moves the back wall, its panels and joinery, the chamfered corner wall, the city map, the lawyer portrait and the archive cabinet deeper into the room; the floor and left wall are lengthened to meet them. The desk, chair, devices, camera, `ScreenAnchor` and `phoneScreen` keep their positions. The generated desk and archive keep their source textures; `replace_with_tripo(..., tint=...)` multiplies the base colour with a Mix (Multiply) node, which the glTF exporter writes as `baseColorFactor`.
+
+A wide window (`WIN_W` × `WIN_H`) opens in the back wall over the laptop, between the archive and the portrait, so the game camera sees it above the laptop lid. The wall is built from four plaster pieces around the opening, with walnut linings, casing, two mullions, a sill on the chair rail and clear glass. Behind the opening, an emissive picture plane larger than the opening shows a sunlit city street, so no gap or empty space is visible. If `window-day.jpg` is missing, the builder draws a procedural sky with house silhouettes instead. The framed city map stays a dark navigation map as a design object: teal ground, darker block silhouettes, a turquoise river, thin light streets and five brass district outlines. Its `City map parchment` remains a separate, flat, unmerged 2.38 × 1.67 quad facing the room (`cityMapSurface` in the manifest), so the game can place a live map over it; all map details stay within 3 cm of it.
+
+The Cycles lights (sun through the window, window daylight, a ceiling bounce, open-side daylight and a warm wall bounce; the lamp is off) only shape `office-preview.png`. The GLB is exported without punctual lights; the game sets up its own lighting, with hints in the manifest's `dayLighting`. Emissive materials that do reach the GLB are listed in `emissiveMaterials`.
+
+Image sources: `window-day.jpg` is a sunlit city street generated with GPT Image through Codex (built-in image generator) on 2026-11-04, downscaled to a 1024 × 576 JPEG from the 1672 × 941 original.
 
 ## Optimizing a Tripo download
 

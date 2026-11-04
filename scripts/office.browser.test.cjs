@@ -30,7 +30,7 @@ fs.mkdirSync(out,{recursive:true});
   }
   await click('[data-object="FolderArchive"]');assert.match(await p.locator('#room-archive-shelves').innerText(),/История вашей практики/);await room();
   await click('#room-laptop-home [data-room-view="cases"]');await click('[data-offer="first-signature"]');
-  await room();assert.match(await p.locator('#room-case-summary').innerText(),/Чужая подпись/);assert.match(await p.locator('#room-ap').innerText(),/12/);
+  await room();assert.match(await p.locator('#room-case-summary').innerText(),/Касса в 20:08/);assert.match(await p.locator('#room-ap').innerText(),/12/);
   await click('[data-object="FolderCurrent"]');assert.match(await p.locator('#desktop-content').innerText(),/Материалы дела/);await room();
   await click('[data-object="FountainPen"]');await p.locator('#case-notes').fill('Проверить время открытия кассы.');await room();
   await click('[data-object="FountainPen"]');assert.equal(await p.locator('#case-notes').inputValue(),'Проверить время открытия кассы.');await room();
@@ -42,10 +42,13 @@ fs.mkdirSync(out,{recursive:true});
    await p.evaluate(()=>window.__officeContextExtension.restoreContext());
    await p.waitForFunction(()=>!OfficeRoom.diagnostics().fallback);
    assert.equal(await p.locator('#menu').isVisible(),false,'context recovery must not reset the career');
-   assert.match(await p.locator('#room-case-summary').innerText(),/Чужая подпись/);
+   assert.match(await p.locator('#room-case-summary').innerText(),/Касса в 20:08/);
   }
   await click('[data-object="Mirror"]');assert.match(await p.locator('#desktop-content').innerText(),/Ваш деловой облик/);await room();
-  await click('[data-object="CityMap"]');assert.match(await p.locator('#desktop-content').innerText(),/Новореченск/i);await room();
+  // The wall map focuses the camera on a live city map; the visitor chair is furniture, not a control.
+  await click('[data-object="CityMap"]');await p.waitForFunction(()=>OfficeRoom.diagnostics().focus==='map'&&!OfficeRoom.diagnostics().transitioning);
+  assert.match(await p.locator('#room-map-screen').innerText(),/Влияние в городе/);assert.equal(await p.locator('#room-map-screen [data-district]').count(),5);await room();
+  assert.equal(await p.locator('[data-object="TripoChair"]').count(),0);
   await click('#room-shortcuts [data-room-view="laptop"]');await p.locator('#desk-app-select').selectOption('settings');await p.locator('#room-quality').selectOption('low');await p.locator('#room-motion').uncheck();await room();
   assert.equal(await p.evaluate(()=>OfficeRoom.diagnostics().quality),'low');
   const overview=await p.evaluate(()=>OfficeRoom.diagnostics().camera);await click('[data-room-camera="left"]');assert.notDeepEqual(await p.evaluate(()=>OfficeRoom.diagnostics().camera),overview);await click('[data-room-camera="right"]');await click('[data-room-camera="reset"]');const restored=await p.evaluate(()=>OfficeRoom.diagnostics().camera);assert.ok(restored.every((n,i)=>Math.abs(n-overview[i])<.001));

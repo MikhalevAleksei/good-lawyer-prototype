@@ -20,7 +20,7 @@ class Links(HTMLParser):
 
 for page in root.glob('*.html'):
     text = page.read_text(encoding='utf-8')
-    assert '__PORTRAIT__' not in text and '__VIDEO__' not in text
+    assert '__PORTRAIT__' not in text and '__VIDEO__' not in text and '__VERDICT_' not in text
     parser = Links()
     parser.feed(text)
     for link in parser.references:
@@ -47,6 +47,11 @@ for script in (root / 'assets').rglob('*'):
 for asset in ('assets/court.mp4', 'assets/lawyer-portrait.jpg'):
     assert asset in game and (root / asset).is_file()
 assert (root / 'assets/court.mp4').stat().st_size > 1_000_000
+for outcome in ('acquit', 'guilty'):
+    clip = root / f'assets/media/verdict-{outcome}.mp4'
+    assert f'assets/media/verdict-{outcome}.mp4' in game, f'Verdict clip is not wired: {outcome}'
+    assert clip.is_file() and 200_000 < clip.stat().st_size < 4_000_000, f'Verdict clip size: {clip}'
+    assert clip.with_suffix('.jpg').is_file(), f'Missing verdict poster: {outcome}'
 assert 'file:///' not in game and '/Users/' not in game
 print('Static pages, all relative links, game assets and JavaScript syntax: PASS')
 

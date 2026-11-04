@@ -6,31 +6,33 @@ import {OrbitControls} from './vendor/three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from './vendor/three/addons/environments/RoomEnvironment.js';
 const MODEL=new URL('__OFFICE_MODEL__',import.meta.url);
 const MANIFEST=new URL('__OFFICE_MANIFEST__',import.meta.url);
-const ACTIONS={Chair:'career',TripoChair:'career',Laptop:'laptop',Phone:'phone',FolderCurrent:'dossier',FolderArchive:'archive',FountainPen:'notes',Bookshelf:'archive',Mirror:'wardrobe',CityMap:'city',Lawyer:'career'};
-const TITLES={Chair:'Кресло адвоката · профиль',TripoChair:'Кресло адвоката · профиль',Laptop:'Ноутбук · дела и подготовка',Phone:'Телефон · переписка и банк',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архивный шкаф · история практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска',Lawyer:'Профиль адвоката'};
+const ACTIONS={Laptop:'laptop',Phone:'phone',FolderCurrent:'dossier',FolderArchive:'archive',FountainPen:'notes',Bookshelf:'archive',Mirror:'wardrobe',CityMap:'city',Lawyer:'career'};
+const TITLES={Laptop:'Ноутбук · дела и подготовка',Phone:'Телефон · переписка и банк',FolderCurrent:'Папка текущего дела',FolderArchive:'Архив завершённых дел',FountainPen:'Перьевая ручка · блокнот',Bookshelf:'Архивный шкаф · история практики',Mirror:'Гардероб и деловой имидж',CityMap:'Карта Новореченска · влияние',Lawyer:'Профиль адвоката'};
 let state=null;
-function objectOf(object){for(let o=object;o;o=o.parent)if(ACTIONS[o.name]&&TITLES[o.name])return o.name==='Chair'?'TripoChair':o.name;return null;}
+function objectOf(object){for(let o=object;o;o=o.parent)if(ACTIONS[o.name]&&TITLES[o.name])return o.name;return null;}
 function create(options){
- const {viewport,canvasHost,cssHost,screenElement,phoneElement,archiveElement,onOpen}=options;
+ const {viewport,canvasHost,cssHost,screenElement,phoneElement,archiveElement,mapElement,onOpen}=options;
  const s=state={...options,active:false,ready:false,failed:false,focus:null,transition:null,quality:options.quality||'auto',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,raf:0,frames:0,meshes:0,triangles:0,lastError:null};
  const loading=document.getElementById('room-loading'),hint=document.getElementById('room-hint');
  let renderer;
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});}catch(error){fallback(error);return;}
  s.renderer=renderer;
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
  renderer.shadowMap.enabled=s.quality!=='low';renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  renderer.domElement.setAttribute('aria-label','Трёхмерные предметы кабинета');renderer.domElement.setAttribute('role','img');
  canvasHost.append(renderer.domElement);
- const scene=s.scene=new THREE.Scene();scene.background=new THREE.Color('#d9d4c7');
+ const scene=s.scene=new THREE.Scene();scene.background=new THREE.Color('#d6d9d2');
  const cssScene=new THREE.Scene(),cssRenderer=s.cssRenderer=new CSS3DRenderer();
  cssRenderer.domElement.style.pointerEvents='none';cssHost.append(cssRenderer.domElement);
  const camera=s.camera=new THREE.PerspectiveCamera(28,1,.05,100);
- scene.add(new THREE.HemisphereLight(0xf7efdc,0x3e3b31,1.15));
- const sun=new THREE.DirectionalLight(0xfff0d4,2.8);sun.position.set(-4,8,7);sun.castShadow=true;
+ scene.add(new THREE.HemisphereLight(0xf4f1e6,0x5a4a36,1.05));
+ // Daylight: one warm sun carries the shadows; the window adds a soft cool glow from behind the desk.
+ const sun=new THREE.DirectionalLight(0xfff1d8,2.6);sun.position.set(-4,8,7);sun.castShadow=true;
  sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-7,near:.5,far:28});sun.shadow.normalBias=.028;sun.shadow.bias=-.00006;scene.add(sun);scene.add(sun.target);
- const fill=new THREE.DirectionalLight(0xdce7e4,.6);fill.position.set(6,4,2);scene.add(fill);
+ const fill=new THREE.DirectionalLight(0xdfe9ee,.55);fill.position.set(6,4,2);scene.add(fill);
+ const windowGlow=s.windowGlow=new THREE.PointLight(0xe8f0ff,0,14,2);scene.add(windowGlow);
  const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();
- scene.environment=pmrem.fromScene(environment,.06).texture;scene.environmentIntensity=.5;environment.dispose();pmrem.dispose();
+ scene.environment=pmrem.fromScene(environment,.06).texture;scene.environmentIntensity=.45;environment.dispose();pmrem.dispose();
  const controls=s.controls=new OrbitControls(camera,renderer.domElement);
  controls.enablePan=false;controls.enableZoom=false;controls.enableDamping=s.motion;controls.dampingFactor=.1;controls.rotateSpeed=.35;
  controls.enableRotate=matchMedia('(pointer:fine)').matches;
@@ -42,6 +44,11 @@ function create(options){
   if(!s.focus){
    position=s.defaultCamera.clone();target=s.defaultTarget.clone();
    const c=s.manifest.camera;fov=THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(c.fov/2))*Math.max(1,c.aspect/camera.aspect)));
+  }else if(s.focus==='map'){
+   const surface=s.surfaces.map,fraction=.92;target=surface.position.clone();fov=30;
+   const tangent=Math.tan(THREE.MathUtils.degToRad(fov/2));
+   const distance=Math.max(s.mapSize.height/(2*tangent*fraction),s.mapSize.width/(2*tangent*camera.aspect*.94));
+   position=target.clone().add(new THREE.Vector3(0,0,distance).applyQuaternion(surface.quaternion));up.applyQuaternion(surface.quaternion);
   }else if(s.focus==='archive'){
    // Frame the upper shelves from above the desk and lamp, using the real model bounds.
    const {center,size}=s.archive;
@@ -84,7 +91,7 @@ function create(options){
  }
  function resize(retarget=true){
   width=Math.max(1,viewport.clientWidth);height=Math.max(1,viewport.clientHeight);
-  screenElement.inert=s.focus==='phone'||s.focus==='archive'||(width<=700&&s.focus!=='laptop');phoneElement.inert=s.focus==='laptop'||s.focus==='archive';
+  screenElement.inert=s.focus==='phone'||s.focus==='archive'||s.focus==='map'||(width<=700&&s.focus!=='laptop');phoneElement.inert=s.focus==='laptop'||s.focus==='archive'||s.focus==='map';if(mapElement)mapElement.inert=s.focus!=='map';
   renderer.setPixelRatio(s.quality==='low'?1:Math.min(devicePixelRatio||1,1.65));renderer.setSize(width,height,false);cssRenderer.setSize(width,height);
   camera.aspect=width/height;
   if(s.ready&&retarget){
@@ -96,7 +103,7 @@ function create(options){
  }
  s.resize=resize;s.invalidate=invalidate;
  s.setFocus=device=>{
-  const focus=['laptop','phone','archive'].includes(device)?device:null;
+  const focus=['laptop','phone','archive','map'].includes(device)&&(device!=='map'||s.surfaces?.map)?device:null;
   if(s.focus===focus)return;
   s.clearTooltips?.();s.focus=focus;viewport.dataset.focus=focus||'overview';resize(false);moveToTarget(true);
  };
@@ -163,6 +170,8 @@ function create(options){
  });
  renderer.domElement.addEventListener('pointercancel',()=>{down=null;clearTooltips();});
  renderer.domElement.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch')showLabel(null);});
+ // Screens are re-rendered under the pointer, so a screen may miss its own leave event; the viewport never does.
+ viewport.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch')showLabel(null);});
  for(const [element,key] of [[screenElement,'Laptop'],[phoneElement,'Phone']]){
   element.addEventListener('pointerenter',()=>{if(!s.focus&&!s.transition)showLabel(key);});
   element.addEventListener('pointerleave',()=>showLabel(null));
@@ -181,13 +190,30 @@ function create(options){
   const p=manifest.phoneScreen,phoneObject=new CSS3DObject(phoneElement);
   phoneElement.style.width=p.domWidth+'px';phoneElement.style.height=p.domHeight+'px';
   phoneObject.position.copy(phone.localToWorld(new THREE.Vector3(...p.position)));phone.getWorldQuaternion(phoneObject.quaternion);phoneObject.scale.set(p.width/p.domWidth,p.height/p.domHeight,1);cssScene.add(phoneObject);
+  const windowCenter=[manifest.dayLighting?.windowCenter,manifest.dayLighting?.window?.center,manifest.dayLighting?.window].find(v=>Array.isArray(v)&&v.length===3);
+  if(windowCenter){s.windowGlow.position.fromArray(windowCenter).add(new THREE.Vector3(0,0,1.2));s.windowGlow.intensity=9;}
+  let mapObject=null;
+  const cityMap=gltf.scene.getObjectByName('CityMap');
+  if(cityMap&&mapElement){
+   let sheet=null;cityMap.traverse(o=>{if(!sheet&&o.isMesh&&/parchment/i.test(o.name+' '+(o.parent?.name||'')))sheet=o;});
+   // The parchment is a thin box facing +Z in the frame's local space; the live map covers its face.
+   const box=sheet?sheet.geometry.boundingBox||(sheet.geometry.computeBoundingBox(),sheet.geometry.boundingBox):null;
+   if(box){
+    const local=new THREE.Vector3((box.min.x+box.max.x)/2,(box.min.y+box.max.y)/2,box.max.z+.012);
+    const worldScale=sheet.getWorldScale(new THREE.Vector3()),w=(box.max.x-box.min.x)*worldScale.x,h=(box.max.y-box.min.y)*worldScale.y;
+    mapObject=new CSS3DObject(mapElement);mapObject.position.copy(sheet.localToWorld(local));sheet.getWorldQuaternion(mapObject.quaternion);
+    mapElement.style.width='1190px';mapElement.style.height=Math.round(1190*h/w)+'px';mapObject.scale.set(w/1190,w/1190,1);cssScene.add(mapObject);s.mapSize={width:w,height:h};
+   }
+  }
   const cabinet=gltf.scene.getObjectByName('Bookshelf');
   if(!cabinet)throw Error('Archive cabinet is missing');
   const bounds=new THREE.Box3().setFromObject(cabinet),size=bounds.getSize(new THREE.Vector3());
   const center=new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y+size.y*.65,bounds.max.z+.045);
   const archiveObject=new CSS3DObject(archiveElement);
   archiveObject.position.copy(center);archiveObject.scale.set(size.x*.86/720,size.y*.55/1080,1);cssScene.add(archiveObject);
-  s.archive={center,size};s.surfaces={laptop:laptopObject,phone:phoneObject,archive:archiveObject};s.ready=true;viewport.dataset.ready='true';viewport.dataset.focus=s.focus||'overview';loading.hidden=true;
+  s.archive={center,size};s.surfaces={laptop:laptopObject,phone:phoneObject,archive:archiveObject,map:mapObject};
+  // Attach every live surface to the 3D layer now: a surface left in the page flow would cover the room at full size.
+  cssRenderer.render(cssScene,camera);s.ready=true;viewport.dataset.ready='true';viewport.dataset.focus=s.focus||'overview';loading.hidden=true;
   resize(false);moveToTarget(false);invalidate();viewport.dispatchEvent(new CustomEvent('office:loaded',{bubbles:true}));
  }).catch(fallback);
  function fallback(error){s.failed=true;s.clearTooltips?.();s.lastError=error?.message||String(error);viewport.dataset.fallback='true';loading.hidden=false;loading.textContent='Все разделы доступны через кнопки под кабинетом.';loading.classList.add('room-fallback-note');if(s.raf)cancelAnimationFrame(s.raf);s.raf=0;window.dispatchEvent(new Event('office:unavailable'));}
@@ -201,6 +227,6 @@ const api={
  setQuality(quality){if(!state)return;state.quality=quality;if(state.renderer)state.renderer.shadowMap.enabled=quality!=='low';state.resize?.();},
  setMotion(motion){if(!state)return;state.motion=!!motion;if(state.controls)state.controls.enableDamping=!!motion;if(!motion)state.finishMotion?.();state.invalidate?.();},
  setView(view){const s=state;if(!s?.ready)return;if(view==='reset'){s.reset();return;}if(s.focus)return;const v=s.camera.position.clone().sub(s.controls.target);v.applyAxisAngle(new THREE.Vector3(0,1,0),view==='left'?-.08:.08);s.camera.position.copy(s.controls.target).add(v);s.controls.update();s.invalidate();},
- diagnostics(){return state?{ready:state.ready,fallback:state.failed,active:state.active,focus:state.focus,transitioning:!!state.transition,camera:state.camera?.position.toArray(),meshes:state.meshes,triangles:state.triangles,frames:state.frames,quality:state.quality,drawCalls:state.renderer?.info.render.calls||0,error:state.lastError}:{ready:false,active:false,focus:null,transitioning:false};}
+ diagnostics(){return state?{ready:state.ready,fallback:state.failed,map:!!state.surfaces?.map,active:state.active,focus:state.focus,transitioning:!!state.transition,camera:state.camera?.position.toArray(),meshes:state.meshes,triangles:state.triangles,frames:state.frames,quality:state.quality,drawCalls:state.renderer?.info.render.calls||0,error:state.lastError}:{ready:false,active:false,focus:null,transitioning:false};}
 };
 globalThis.OfficeRoom=Object.freeze(api);window.dispatchEvent(new Event('office:ready'));

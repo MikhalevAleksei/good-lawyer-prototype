@@ -54,7 +54,8 @@
         postponed:false,phase:'prepare',courtChoice:null};
       this.s.result=null;
       this.addMaterial('initial','document',8,c.materials.initial.title,c.materials.initial.text,'Клиент');
-      this.addMaterial('rumor','witness',-18,c.materials.rumor.title,c.materials.rumor.text,'Непроверенное сообщение',true);
+      if(c.episode){this.s.active.ep={done:[],pending:[],facts:[],today:{day:this.s.day,mark:0,irina:0},witnesses:{},coordinated:[],noteFound:false,noteRestored:false,penalty:0};this.s.chats.irina.push({day:this.s.day,mine:false,text:'Жду улики для изучения.'});}
+      else this.addMaterial('rumor','witness',-18,c.materials.rumor.title,c.materials.rumor.text,'Непроверенное сообщение',true);
       if(!probono) this.log('client','Получен бюджет: '+c.title,c.budget);
     }
     preparing() { const a=this.s.active; return !!a && a.phase==='prepare' && this.s.day<a.deadline && !this.s.ending; }
@@ -69,6 +70,7 @@
     orderBlock(key) {
       const a=this.s.active,o=ORDERS[key];
       if(!a||!o) return 'Сначала примите дело';
+      if(a.ep) return 'В этом деле — свои поручения';
       if(!this.preparing()) return 'Подготовка завершена';
       if(a.done.includes(key)||a.pending.some(t=>t.key===key)) return 'Поручение уже выдано';
       if(a.ap<o.ap) return 'Недостаточно ОД';
@@ -98,6 +100,7 @@
     }
     completeTasks() {
       const a=this.s.active,c=this.definition;if(!a)return;
+      if(a.ep){const due=a.ep.pending.filter(t=>t.due<=this.s.day);a.ep.pending=a.ep.pending.filter(t=>t.due>this.s.day);for(const t of due)this.epFinish(c.episode.orders.find(o=>o.id===t.id));if(due.length)this.say(`Готово поручений: ${due.length}. Результаты в досье, ответы — в телефоне.`);return;}
       const due=a.pending.filter(t=>t.due<=this.s.day);a.pending=a.pending.filter(t=>t.due>this.s.day);
       for(const t of due) {
         const o=ORDERS[t.key];a.done.push(t.key);let text;
@@ -120,7 +123,7 @@
     }
     chooseApproach(approach) {
       const a=this.s.active;
-      if(!this.canSpend(1)||a.approach||!['free','guided','pressure'].includes(approach)) return this.say('Начать эту беседу сейчас нельзя.',false);
+      if(!this.canSpend(1)||a.ep||a.approach||!['free','guided','pressure'].includes(approach)) return this.say('Начать эту беседу сейчас нельзя.',false);
       a.approach=approach;
       if(approach==='pressure') this.illegal(14);
       a.protocol.push({q:'Начало беседы',a:approach==='free'?this.definition.witness.account:approach==='guided'?this.definition.witness.guided:'Вы предложили свидетелю согласовать удобную версию событий. Это создаёт риск для защиты.'});
@@ -129,7 +132,7 @@
     question(key) {
       const a=this.s.active,c=this.definition;
       const labels={events:'Что вы видели лично?',time:'Когда это произошло?',detail:'Что подтверждает ваши слова?',conflict:'Как объяснить противоречие?',source:'Откуда вы это знаете?',certainty:'В чём вы не уверены?',review:'Сверить рассказ с новым документом',confirm:'Готовы повторить это в суде?'};
-      if(!labels[key]||!this.canSpend(1)||!a.approach||a.questions.includes(key)||a.questions.length>=8) return this.say('Вопрос недоступен или уже задан.',false);
+      if(!labels[key]||!this.canSpend(1)||a.ep||!a.approach||a.questions.includes(key)||a.questions.length>=8) return this.say('Вопрос недоступен или уже задан.',false);
       if(key==='review'&&!a.materials.some(m=>m.id==='documents'))return this.say('Сначала получите проверенный документ.',false);
       a.ap--;a.questions.push(key);
       const w=c.witness;
@@ -164,6 +167,7 @@
     plan() {const a=this.s.active;return a?(a.manualPlan?a.selection:a.materials.slice(0,4).map(m=>m.id)):[];}
     assessment(choice=null) {
       const a=this.s.active,c=this.definition;if(!a)return null;
+      if(a.ep)return this.epAssessment(choice);
       const selected=this.plan().map(id=>a.materials.find(m=>m.id===id));
       const rows=[{label:'Базовая позиция клиента',value:8}];
       selected.forEach(m=>rows.push({label:m.title,value:m.power}));
@@ -206,9 +210,93 @@
       this.s.completed.push(result);this.s.result=result;this.s.active=null;
       this.mail(c.client,won?'Защита сработала':'Дело завершено',`${late?'Слушание пропущено.':won?'Задача защиты выполнена.':'Доводов оказалось недостаточно.'} Начислен гонорар ${fee.toLocaleString('ru-RU')} ₽. Неиспользованный бюджет возвращён.`);
       this.s.news.unshift({day:this.s.day,title:(won?'Успех защиты: ':'Вердикт: ')+c.title,body:late?'Адвокат пропустил заседание.':c.objective+' Результат: '+(won?'цель достигнута.':'цель не достигнута.')});
+      const bonus=a.ep&&c.episode.bonus;
+      if(bonus&&won&&bonus.facts.every(id=>a.ep.facts.includes(id))){result.bonus=true;this.mail(bonus.mail.from,bonus.mail.title,bonus.mail.body);this.s.news.unshift({day:this.s.day,title:bonus.news.title,body:bonus.news.body});}
       if(!this.s.training) {this.s.stage++;if(this.s.stage>10)this.s.campaignComplete=true;}
       if(!late)this.advanceDay();
       this.say(won?'Дело выиграно. Разбор результата доступен на ноутбуке.':late?'Вы пропустили слушание. Дело проиграно.':'Дело проиграно. Разбор покажет, каких доводов не хватило.');
+    }
+    // Scripted cases (case.episode) describe their own orders, witnesses and facts.
+    epToday() {const a=this.s.active;if(a.ep.today.day!==this.s.day)a.ep.today={day:this.s.day,mark:0,irina:0};return a.ep.today;}
+    epWitness(id) {return this.definition?.episode?.witnesses.find(w=>w.id===id);}
+    epFact(id) {const a=this.s.active;if(id&&!a.ep.facts.includes(id))a.ep.facts.push(id);}
+    epOrderBlock(id) {
+      const a=this.s.active,ep=this.definition?.episode,o=ep?.orders.find(x=>x.id===id);
+      if(!a?.ep||!o)return 'Поручение недоступно';
+      if(!this.preparing())return 'Подготовка завершена';
+      if(a.ep.done.includes(id))return 'Уже выполнено';
+      if(a.ep.pending.some(t=>t.id===id))return 'Поручение уже выдано';
+      const missing=(o.requires||[]).find(r=>!a.ep.done.includes(r));
+      if(missing)return 'Сначала: '+ep.orders.find(x=>x.id===missing).label.toLowerCase();
+      if(a.ap<o.ap)return 'Недостаточно ОД';
+      if((!ep.perDayAgent||o.agent===ep.perDayAgent)&&this.epToday()[o.agent]>=ep.perDay)return 'Сегодня уже '+ep.perDay+' поручения '+(o.agent==='mark'?'детективу':'этому исполнителю');
+      if(this.s.day+o.days>a.deadline)return 'Не успеет к заседанию';
+      return '';
+    }
+    epOrder(id) {
+      const blocked=this.epOrderBlock(id);if(blocked)return this.say(blocked,false);
+      const a=this.s.active,o=this.definition.episode.orders.find(x=>x.id===id);
+      a.ap-=o.ap;this.epToday()[o.agent]++;
+      this.s.chats[o.agent].push({day:this.s.day,mine:true,text:o.label+(o.days?`. Срок: день ${this.s.day+o.days}.`:'. Нужно сегодня.')});
+      if(!o.days){this.epFinish(o);return this.say('Готово: '+o.label.toLowerCase()+'. Результат в досье.');}
+      a.ep.pending.push({id,due:this.s.day+o.days,started:this.s.day});
+      return this.say(`Поручение принято. Ответ придёт в день ${this.s.day+o.days}.`);
+    }
+    epFinish(o) {
+      const a=this.s.active;a.ep.done.push(o.id);this.epFact(o.fact);if(o.note)a.ep.noteFound=true;
+      this.s.chats[o.agent].push({day:this.s.day,mine:false,text:o.result});
+      this.mail(o.agent==='mark'?'Марк Волков':'Ирина Лебедева','Готово: '+o.label,o.result);
+    }
+    epInterview(id,mode) {
+      const a=this.s.active,w=this.epWitness(id),st=a?.ep?.witnesses[id],cost=mode==='free'?2:0;
+      if(!w||!this.preparing()||!['free','ask'].includes(mode)||st?.mode)return this.say('Этот допрос сейчас недоступен.',false);
+      if(a.ap<cost)return this.say('Недостаточно ОД.',false);
+      a.ap-=cost;
+      const record=a.ep.witnesses[id]=st||{mode:null,asked:[],log:[],port:false};
+      record.mode=mode;record.log.push({q:w[mode].prompt,a:mode==='free'?w.free.answer:'Хорошо, спрашивайте.'});
+      return this.say(mode==='free'?'Свидетель рассказал о событиях. Уточняющий вопрос — 1 ОД.':'Свидетель готов отвечать. Каждый вопрос — 1 ОД.');
+    }
+    epAsk(id,qid) {
+      const a=this.s.active,w=this.epWitness(id),st=a?.ep?.witnesses[id];
+      const q=st?.mode&&w[st.mode].questions.find(x=>x.id===qid);
+      if(!q||!this.preparing()||st.asked.includes(qid))return this.say('Вопрос недоступен или уже задан.',false);
+      if(a.ap<1)return this.say('Недостаточно ОД.',false);
+      a.ap--;st.asked.push(qid);st.log.push({q:q.q,a:q.a});this.epFact(q.fact);
+      return this.say('Ответ записан в протокол. Осталось ОД: '+a.ap+'.');
+    }
+    epPort(id) {
+      const a=this.s.active,w=this.epWitness(id),st=a?.ep?.witnesses[id];
+      if(!w||!st?.mode||!a.ep.noteRestored||st.port||!this.preparing())return this.say('Этот вопрос сейчас недоступен.',false);
+      if(a.ap<1)return this.say('Недостаточно ОД.',false);
+      a.ap--;st.port=true;st.log.push({q:'Вы бываете в районе Старого порта?',a:w.port.a});this.epFact(w.port.fact);
+      return this.say('Ответ записан в протокол.');
+    }
+    epCoordinate(id) {
+      const a=this.s.active,ep=this.definition?.episode,w=this.epWitness(id);
+      if(!w||!a?.ep||!this.preparing()||a.ep.coordinated.includes(id))return this.say('Это предложение сейчас недоступно.',false);
+      if(a.ap<ep.coordinateAp)return this.say('Недостаточно ОД.',false);
+      a.ap-=ep.coordinateAp;a.ep.coordinated.push(id);this.illegal(ep.coordinateHeat);a.ep.penalty+=w.coordinatePenalty||0;
+      const record=a.ep.witnesses[id]=a.ep.witnesses[id]||{mode:null,asked:[],log:[],port:false};
+      record.log.push({q:'Давайте согласуем ваши показания в суде.',a:w.coordinate});
+      return this.say('Свидетель отказался. Попытка согласовать показания повышает внимание следствия.',false);
+    }
+    restoreNote(order) {
+      const a=this.s.active,note=this.definition?.episode?.note;
+      if(!note||!a?.ep||!a.ep.noteFound||a.ep.noteRestored||!this.preparing()||!Array.isArray(order))return this.say('Записку сейчас не собрать.',false);
+      const norm=t=>t.toLowerCase().replace(/[^а-яёa-z0-9]/g,'');
+      if(norm(order.map(i=>note.pieces[i]||'').join(''))!==norm(note.text))return this.say('Текст пока не складывается.',false);
+      a.ep.noteRestored=true;a.ap+=note.ap;this.epFact(note.fact);
+      return this.say(`Записка восстановлена: «${note.text}». +${note.ap} ОД.`);
+    }
+    epScore() {const a=this.s.active,ep=this.definition.episode;return a.ep.facts.reduce((sum,id)=>sum+ep.facts[id].weight,0);}
+    epAssessment(choice=null) {
+      const a=this.s.active,c=this.definition,ep=c.episode,rows=a.ep.facts.map(id=>({label:ep.facts[id].title,value:ep.facts[id].weight}));
+      const missing=ep.required.filter(id=>!a.ep.facts.includes(id));
+      for(const id of missing)rows.push({label:'Не доказано: '+ep.facts[id].title.charAt(0).toLowerCase()+ep.facts[id].title.slice(1),value:0});
+      if(a.ep.penalty)rows.push({label:'Свидетель сообщит суду о попытке согласовать показания',value:-a.ep.penalty});
+      if(choice!==null&&choice!==c.court.answer)rows.push({label:'Неубедительный ответ суду',value:-10});
+      const score=clamp(rows.reduce((sum,r)=>sum+r.value,0));
+      return {score,target:c.target,won:score>=c.target&&!missing.length,rows,selected:a.ep.facts.map(id=>ep.facts[id].title),manual:true,line:c.bestLine,missing};
     }
     illegal(base) {
       const recent=this.s.illegalDays.filter(day=>this.s.day-day<10).length,delta=base+8*recent;
@@ -237,6 +325,7 @@
       if(this.s.ending)return;
       this.s.day++;this.s.heat=Math.max(0,this.s.heat-2);
       this.completeTasks();
+      if(this.s.active?.ep&&this.s.day<=this.s.active.deadline)this.s.active.ap+=this.definition.episode.apPerDay;
       if((this.s.day-1)%7===0)this.bill('Аренда и персонал за неделю',this.weeklyCost());
       this.settleProbe();
       const a=this.s.active;

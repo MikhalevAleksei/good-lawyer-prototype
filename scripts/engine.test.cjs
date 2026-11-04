@@ -54,7 +54,18 @@ function finish(g, choice = g.definition.court.answer) {
   return g.s.result;
 }
 
+// Chapter 1 is scripted: the minimal winning path from the episode screenplay.
+function prepareEpisode(g) {
+  for(const id of ['cameras','profile_waiter'])assert.equal(g.epOrder(id).ok,true,id);
+  assert.equal(g.epInterview('waiter','free').ok,true);
+  for(const q of ['duration','others'])assert.equal(g.epAsk('waiter',q).ok,true,q);
+  g.nextDay();assert.equal(g.epOrder('study_bus').ok,true);
+  g.nextDay();assert.equal(g.epOrder('deep_bus').ok,true);
+  while(!g.planOpen())assert.equal(g.nextDay(),true);
+}
+
 function prepareGood(g) {
+  if(g.definition.episode)return prepareEpisode(g);
   assert.equal(g.order('documents').ok,true);
   assert.equal(g.order('observe').ok,true);
   assert.equal(g.chooseApproach('free').ok,true);
@@ -461,11 +472,8 @@ test('a fine permits recovery through the accessible pro bono branch without ope
   const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases;
   const g=new Game(cases),first=cases.find(c=>c.step===1);
   assert.equal(g.offer(first.id).ok,true);
-  g.s.active.personalFunding=true;
-  assert.equal(g.order('bribe').ok,true);g.nextDay();
-  assert.equal(g.order('intimidate').ok,true);g.nextDay();
-  assert.equal(g.chooseApproach('pressure').ok,true);
-  assert.equal(g.defend().ok,true);
+  for(const id of ['admin','waiter','driver'])assert.equal(g.epCoordinate(id).ok,false,'witnesses refuse to coordinate');
+  assert.ok(g.s.investigation,'three attempts to coordinate testimony open an investigation');
   while(!g.planOpen()&&!g.s.ending)g.nextDay();
   if(!g.s.ending)finish(g,(first.court.answer+1)%3);
   assert.ok(g.s.mail.some(m=>m.title==='Назначен штраф'));
@@ -488,4 +496,56 @@ test('the court reply changes the score of a well-prepared standard defence',()=
   const good=g.assessment(g.definition.court.answer);
   const bad=g.assessment((g.definition.court.answer+1)%3);
   assert.ok(good.score>bad.score,'the scale must leave room for the courtroom answer');
+});
+
+test('chapter 1 follows the episode script: daily AP, two orders a day, same-day follow-ups and the torn note',()=>{
+  const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases;
+  const g=new Game(cases),c=cases.find(x=>x.step===1);
+  assert.equal(g.offer(c.id).ok,true);
+  const a=g.s.active;
+  assert.equal(a.deadline,7,'six days of preparation, the hearing on day 7');assert.equal(a.ap,12);
+  assert.equal(g.order('documents').ok,false,'generic orders are closed in the scripted case');
+  assert.equal(g.epOrder('cameras').ok,true);assert.equal(g.epOrder('search').ok,true);
+  assert.match(g.epOrderBlock('profile_admin'),/2 поручения/,'two orders a day for the detective');
+  assert.match(g.epOrderBlock('study_bus'),/Сначала/,'the expert needs the recordings first');
+  g.nextDay();
+  assert.equal(a.ap,12-4+2,'each new day restores 2 AP');
+  assert.equal(a.ep.noteFound,true);
+  assert.equal(g.restoreNote([1,0,2,3,4,5,6,7]).ok,false,'a wrong order does not restore the note');
+  assert.equal(g.restoreNote([0,1,2,3,8,4,5,6,7]).ok,true,'blank scraps are ignored');
+  assert.equal(a.ap,12,'the restored note gives 2 AP');assert.ok(a.ep.facts.includes('note'));
+  assert.equal(g.epOrder('profile_admin').ok,true);g.nextDay();
+  const before=a.ap;assert.equal(g.epOrder('extra_admin').ok,true);
+  assert.equal(a.ap,before-1);assert.ok(a.ep.facts.includes('admin_flats'),'follow-ups arrive the same day');
+  assert.equal(g.epInterview('admin','ask').ok,true);assert.equal(g.epInterview('admin','free').ok,false,'one interview type per witness');
+  assert.equal(g.epAsk('admin','keys').ok,true);assert.equal(g.epPort('admin').ok,true);
+  assert.ok(['admin_lock','admin_port'].every(id=>a.ep.facts.includes(id)));
+});
+
+test('chapter 1 is won only with the waiter testimony and the corrected bus clock',()=>{
+  const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases,c=cases.find(x=>x.step===1);
+  const minimal=new Game(cases);minimal.offer(c.id);prepareEpisode(minimal);
+  assert.equal(minimal.epScore(),60);const won=finish(minimal);assert.equal(won.won,true);assert.equal(won.score,60);
+  const wrong=new Game(cases);wrong.offer(c.id);prepareEpisode(wrong);assert.equal(finish(wrong,(c.court.answer+1)%3).won,false,'a wrong court answer costs 10%');
+  const noWaiter=new Game(cases);noWaiter.offer(c.id);
+  for(const id of ['cameras','profile_admin'])noWaiter.epOrder(id);noWaiter.nextDay();
+  for(const id of ['search','profile_waiter'])noWaiter.epOrder(id);noWaiter.epOrder('study_bus');noWaiter.nextDay();
+  noWaiter.restoreNote([0,1,2,3,4,5,6,7]);noWaiter.epOrder('deep_bus');noWaiter.epOrder('extra_admin');
+  noWaiter.epInterview('admin','ask');noWaiter.epAsk('admin','keys');noWaiter.epPort('admin');
+  while(!noWaiter.planOpen())noWaiter.nextDay();
+  const lost=finish(noWaiter);assert.ok(lost.score>=60,'enough points without the key testimony');assert.equal(lost.won,false,'the waiter testimony is required');
+});
+
+test('the full chapter 1 investigation reaches 100% and opens a check against the administrator',()=>{
+  const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases,c=cases.find(x=>x.step===1);
+  const g=new Game(cases);g.offer(c.id);
+  for(const id of ['cameras','profile_waiter'])assert.equal(g.epOrder(id).ok,true,id);
+  assert.equal(g.epInterview('waiter','free').ok,true);for(const q of ['duration','others'])g.epAsk('waiter',q);
+  g.nextDay();for(const id of ['search','profile_admin'])assert.equal(g.epOrder(id).ok,true,id);assert.equal(g.epOrder('study_bus').ok,true);
+  g.nextDay();assert.equal(g.restoreNote([0,1,2,3,4,5,6,7]).ok,true);
+  for(const id of ['extra_admin','deep_bus'])assert.equal(g.epOrder(id).ok,true,id);
+  assert.equal(g.epInterview('admin','ask').ok,true);for(const q of ['keys'])assert.equal(g.epAsk('admin',q).ok,true);assert.equal(g.epPort('admin').ok,true);
+  while(!g.planOpen())g.nextDay();
+  assert.equal(g.epScore(),100);const r=finish(g);assert.equal(r.won,true);assert.equal(r.bonus,true);
+  assert.ok(g.s.mail.some(m=>m.title==='Проверка администратора клуба'));
 });

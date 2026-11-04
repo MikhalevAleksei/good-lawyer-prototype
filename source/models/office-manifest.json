@@ -88,7 +88,12 @@
       "materialAdjustment": {
         "metallic": 0.04,
         "roughness": 0.48,
-        "normalStrength": 0.28
+        "normalStrength": 0.28,
+        "baseColorTint": [
+          0.32,
+          0.58,
+          1.0
+        ]
       }
     },
     {
@@ -139,7 +144,12 @@
       "materialAdjustment": {
         "metallic": 0.04,
         "roughness": 0.56,
-        "normalStrength": 0.28
+        "normalStrength": 0.28,
+        "baseColorTint": [
+          0.28,
+          0.42,
+          0.7
+        ]
       }
     },
     {
@@ -190,7 +200,8 @@
       "materialAdjustment": {
         "metallic": 0.42,
         "roughness": 0.32,
-        "normalStrength": 0.2
+        "normalStrength": 0.2,
+        "baseColorTint": null
       },
       "blenderFinishing": "Original generated geometry retained; metal fittings refinished in brass and shade in dark green enamel. Mottled source texture removed from the scene.",
       "sourceTexturesRetainedInScene": false
@@ -243,7 +254,8 @@
       "materialAdjustment": {
         "metallic": 0,
         "roughness": 0.76,
-        "normalStrength": 0.35
+        "normalStrength": 0.35,
+        "baseColorTint": null
       }
     },
     {
@@ -294,7 +306,8 @@
       "materialAdjustment": {
         "metallic": 0.32,
         "roughness": 0.38,
-        "normalStrength": 0.13
+        "normalStrength": 0.13,
+        "baseColorTint": null
       },
       "blenderFinishing": "Generated casing retained; continuous hinge fitting, recalculated normals, planar machined work deck, separate keycaps, trackpad and bevelled display trim authored in Blender."
     },
@@ -346,7 +359,8 @@
       "materialAdjustment": {
         "metallic": 0.24,
         "roughness": 0.35,
-        "normalStrength": 0.13
+        "normalStrength": 0.13,
+        "baseColorTint": null
       }
     }
   ],
@@ -425,9 +439,9 @@
     "Cactus",
     "TripoChair"
   ],
-  "triangles": 116330,
-  "meshObjects": 60,
-  "materials": 42,
+  "triangles": 114962,
+  "meshObjects": 64,
+  "materials": 48,
   "labelAnchors": {
     "Laptop": [
       -1.4,
@@ -457,7 +471,7 @@
     "Bookshelf": [
       -4.98,
       4.9,
-      -3.5
+      -4.7
     ],
     "Desk": [
       0,
@@ -487,13 +501,170 @@
     "CityMap": [
       4.4,
       4.9,
-      -3.5
+      -4.7
     ],
     "Lawyer": [
       1.99,
       4.56,
-      -3.9
+      -5.1
     ]
   },
-  "glbBytes": 6997500
+  "backShift": 1.2,
+  "cityMapSurface": {
+    "object": "City map parchment",
+    "threeName": "City_map_parchment",
+    "parent": "CityMap",
+    "position": [
+      0.0,
+      0.0,
+      0.097
+    ],
+    "width": 2.38,
+    "height": 1.67,
+    "localPlane": "XY",
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "worldCorners": [
+      [
+        3.4525,
+        2.845,
+        -5.6562
+      ],
+      [
+        5.328,
+        2.845,
+        -4.1909
+      ],
+      [
+        5.328,
+        4.515,
+        -4.1909
+      ],
+      [
+        3.4525,
+        4.515,
+        -5.6562
+      ]
+    ],
+    "note": "Flat unmerged quad; map details stay within 0.03 m in front of it."
+  },
+  "windowView": {
+    "image": "art/office/window-day.jpg",
+    "size": [
+      1024,
+      576
+    ],
+    "uvCrop": [
+      0.0424,
+      0.0,
+      0.9576,
+      1.0
+    ],
+    "emissionStrength": 1.2
+  },
+  "dayLighting": {
+    "exportedLights": [],
+    "note": "The GLB carries no punctual lights; the Cycles preview lights are listed as hints for the runtime rig. sunDirection is the direction the light travels.",
+    "sunDirection": [
+      0.3802,
+      -0.5802,
+      0.7203
+    ],
+    "sunColor": [
+      1,
+      0.93,
+      0.82
+    ],
+    "sunStrength": 3.2,
+    "windowCenter": [
+      -1.6,
+      3.775,
+      -5.765
+    ],
+    "windowSize": [
+      4.2,
+      2.35
+    ],
+    "windowNormal": [
+      0,
+      0,
+      1
+    ],
+    "windowColor": [
+      1,
+      0.97,
+      0.92
+    ],
+    "skyColor": [
+      0.62,
+      0.57,
+      0.48
+    ],
+    "lamp": "off"
+  },
+  "emissiveMaterials": [
+    {
+      "material": "Laptop dark green glass",
+      "strength": 0.22,
+      "color": [
+        0.03,
+        0.09,
+        0.065
+      ]
+    },
+    {
+      "material": "Navigation map brass districts",
+      "strength": 0.16,
+      "color": [
+        0.55,
+        0.36,
+        0.12
+      ]
+    },
+    {
+      "material": "Navigation map river",
+      "strength": 0.3,
+      "color": [
+        0.03,
+        0.42,
+        0.46
+      ]
+    },
+    {
+      "material": "Navigation map streets",
+      "strength": 0.2,
+      "color": [
+        0.62,
+        0.68,
+        0.6
+      ]
+    },
+    {
+      "material": "Phone idle screen",
+      "strength": 0.2,
+      "color": [
+        0.03,
+        0.09,
+        0.062
+      ]
+    },
+    {
+      "material": "Phone screen lettering",
+      "strength": 0.4,
+      "color": [
+        0.78,
+        0.76,
+        0.6
+      ]
+    },
+    {
+      "material": "Window day city view",
+      "strength": 1.2,
+      "color": "texture"
+    }
+  ],
+  "glbBytes": 7196820
 }

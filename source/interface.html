@@ -5,6 +5,7 @@
     <div class="menu-copy">
       <p class="eyebrow">Новореченск / частная практика</p>
       <h1 id="menu-title">Хороший<br>адвокат</h1>
+      <p class="menu-subtitle">Начало карьеры</p>
       <p class="menu-lead">У каждого дела есть цена.<br>У каждого решения — последствия.</p>
       <div class="menu-actions">
         <button class="gold" data-action="new-game">Новая игра <span>↗</span></button>
@@ -12,7 +13,7 @@
         <button data-action="rules" aria-expanded="false" aria-controls="rules">Как играть <span>+</span></button>
       </div>
       <div id="rules" class="rules" hidden><ol><li>Выберите дело на ноутбуке. Клиент ответит на ваше предложение письмом.</li><li>Тратьте ОД на поручения, беседу со свидетелем и анализ материалов. Поручения выполняются при переходе дня.</li><li>За день до суда выберите до четырёх материалов, линию и порядок защиты. Ответьте на вопрос судьи.</li><li>Бюджет клиента покрывает расходы дела. Личные вложения разрешаются отдельно в банке. Незаконные методы оставляют улики против вас.</li></ol><p>Дни меняются только кнопкой. «Продолжить» работает в текущей сессии; открытие ссылки начинает с меню.</p></div>
-      <p class="menu-note">Кампания «Северный берег»<br><b>10 глав · 19 вариантов дел · ваш путь</b></p>
+      <p class="menu-note">Первая кампания «Северный берег»<br><b>10 глав · 19 вариантов дел · ваш путь</b></p>
       <a class="menu-about" href="scenario.html" target="_blank" rel="noopener">О механиках этой версии ↗</a>
     </div>
     <div class="menu-art"><img src="__PORTRAIT__" alt="Адвокат в зале суда"><div class="art-caption"><span>01 / СЕВЕРНЫЙ БЕРЕГ</span><p>Вы защищаете чужую свободу.<br>Пока не приходится защищать свою.</p></div></div>
@@ -23,9 +24,9 @@
 
     <section id="office-room" class="office-room" aria-label="Трёхмерный кабинет адвоката" hidden>
       <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 ₽</strong></div></div></header>
-      <nav id="room-focus-bar" class="room-focus-bar" aria-label="Рабочие места кабинета" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-room-view="archive">Архив</button><button data-action="room">← Общий вид</button></div></nav>
+      <nav id="room-focus-bar" class="room-focus-bar" aria-label="Рабочие места кабинета" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-room-view="archive">Архив</button><button data-room-view="map">Карта</button><button data-action="room">← Общий вид</button></div></nav>
       <div id="room-viewport" class="room-viewport">
-        <img class="room-preview" src="assets/models/office-preview.png" alt="Кабинет адвоката: ноутбук на столе, архивный шкаф и настольная лампа слева, кресло и карта справа, телефон, кактус, две папки и перьевая ручка">
+        <img class="room-preview" src="assets/models/office-preview.png" alt="Кабинет адвоката днём: окно на город, ноутбук на столе, архивный шкаф и настольная лампа слева, кресло посетителя и карта города справа, телефон, две папки и перьевая ручка">
         <div id="room-webgl" class="room-webgl"></div><div id="room-css3d" class="room-css3d"></div>
         <div id="room-loading" class="room-loading" role="status">Открываем кабинет…</div>
         <div id="room-object-labels" class="room-object-labels"></div>
@@ -35,6 +36,7 @@
         <div id="room-phone-screen" class="room-phone-screen" aria-label="Экран телефона"><button class="phone-wake" data-room-view="phone"><span>09:41</span><strong>Личная линия</strong><small>Коснитесь, чтобы открыть</small></button><div id="room-phone-workspace" hidden></div></div>
         <section id="room-archive-shelves" class="room-archive-shelves" aria-label="Папки завершённых дел" hidden></section>
         <div id="room-archive-controls" class="room-archive-controls" hidden></div>
+        <section id="room-map-screen" class="room-map-screen" aria-label="Карта Новореченска" hidden></section>
         <section id="room-archive-detail" class="room-archive-detail" aria-labelledby="archive-document-title" hidden></section>
       </div>
       <nav id="room-mobile-programs" class="room-mobile-programs" aria-label="Программы ноутбука"></nav>
@@ -48,17 +50,17 @@
         <div class="device-label"><span>01 / Ноутбук</span><span>Дела и публичная жизнь</span></div>
         <div class="laptop">
           <header class="brandbar"><div class="brand"><span class="seal" aria-hidden="true">ХА</span><div><strong>ХОРОШИЙ АДВОКАТ</strong><small id="lawyer-name">Частная практика</small></div></div><div class="date"><span id="district-label">Пригород</span><b id="day-label">День 1</b></div></header>
-          <div class="metrics"><div><span>ИЗВЕСТНОСТЬ</span><b id="rep">8</b><small>/ 100</small><i><em id="rep-bar"></em></i></div><div><span>ПРОФЕССИОНАЛИЗМ</span><b id="professional">5</b><small>/ 100</small><i><em id="professional-bar"></em></i></div><div class="danger-metric"><span>ВНИМАНИЕ СЛЕДСТВИЯ</span><b id="heat">0</b><small>/ 100</small><i><em id="heat-bar"></em></i></div></div>
-          <nav class="desk-nav" aria-label="Программы ноутбука"><select id="desk-app-select" aria-label="Открыть программу"><option value="" disabled selected>Программы</option><option value="cases">Дела</option><option value="dossier">Досье</option><option value="witness">Свидетель</option><option value="evidence">Улики</option><option value="actions">Поручения</option><option value="notes">Блокнот</option><option value="plan">План защиты</option><option value="mail">Почта</option><option value="news">Новости</option><option value="archive">Архив</option><option value="career">Карьера</option><option value="city">Карта города</option><option value="wardrobe">Гардероб</option><option value="settings">Настройки</option><option value="shop">Магазин</option></select><button data-desk="cases" aria-pressed="true">Дела</button><button data-desk="dossier">Досье</button><button data-desk="witness">Свидетель</button><button data-desk="plan">План защиты</button><button data-desk="career">Карьера</button><button data-desk="news">Новости</button><button data-desk="mail">Почта <span id="mail-badge" class="badge">1</span></button></nav>
+          <div class="metrics"><div><span>ИЗВЕСТНОСТЬ</span><b id="rep">8</b><small>/ 100</small><i><em id="rep-bar"></em></i></div><div><span>ПРОФЕССИОНАЛИЗМ</span><b id="professional">5</b><small>/ 100</small><i><em id="professional-bar"></em></i></div><div class="money-metric"><span>СЧЁТ</span><b id="money">90 000 ₽</b></div><div class="danger-metric"><span>ВНИМАНИЕ СЛЕДСТВИЯ</span><b id="heat">0</b><small>/ 100</small><i><em id="heat-bar"></em></i></div></div>
+          <nav class="desk-nav" aria-label="Программы ноутбука"><button data-desk="overview" aria-pressed="true">Обзор</button><button data-desk="cases">Дела</button><button data-desk="dossier">Досье</button><button data-desk="witness">Свидетель</button><button data-desk="plan">План</button><button data-desk="mail">Почта <span id="mail-badge" class="badge">1</span></button><button data-desk="news">Новости</button><button data-desk="city">Карта</button><button data-desk="career">Карьера</button><select id="desk-app-select" aria-label="Другие программы"><option value="" disabled selected>Ещё</option><option value="evidence">Улики</option><option value="actions">Поручения</option><option value="notes">Блокнот</option><option value="archive">Архив</option><option value="wardrobe">Гардероб</option><option value="shop">Магазин</option><option value="settings">Настройки</option></select><p class="desk-motto" aria-hidden="true">Закон<br>Люди<br>Выбор<br>Имеют значение</p></nav>
           <div id="case-strip" class="case-strip" hidden></div>
           <div id="desktop-content" class="desktop-content"></div>
           <div id="investigation" class="investigation" hidden></div>
-          <footer class="desk-footer"><small id="footer-label">Начните с предложения клиенту</small><div><button class="secondary" data-action="court" id="court-button" disabled>В суд</button><button class="primary" data-action="day" id="day-button">Следующий день →</button></div></footer>
+          <footer class="desk-footer"><small id="footer-label">Начните с предложения клиенту</small><div id="day-track" class="day-track" aria-label="Дни до заседания"></div><div><button class="secondary" data-action="court" id="court-button" disabled>В суд</button><button class="primary" data-action="day" id="day-button">Следующий день →</button></div></footer>
         </div>
       </section>
       <section class="phone-col" aria-label="Телефон">
         <div class="device-label"><span>02 / Телефон</span><span>На связи</span></div>
-        <div class="phone"><div class="phone-inner"><div class="phone-status"><span>09:41</span><div aria-hidden="true"></div><span>LTE ▰</span></div><header class="phone-header"><span class="eyebrow">Личная линия</span><h2 id="phone-title">Контакты</h2></header><nav class="phone-nav" aria-label="Приложения телефона"><button data-phone="chat" aria-pressed="true">Переписка</button><button data-phone="bank">Банк</button></nav><div id="phone-content"></div><div class="home-line" aria-hidden="true"></div></div></div>
+        <div class="phone"><div class="phone-inner"><div class="phone-status"><span>09:41</span><div aria-hidden="true"></div><span>LTE ▰</span></div><header class="phone-header"><span class="eyebrow">Личная линия</span><h2 id="phone-title">Контакты</h2></header><div id="phone-content"></div><nav class="phone-nav" aria-label="Приложения телефона"><button data-phone="chat" aria-pressed="true">Чаты</button><button data-phone="contacts">Контакты</button><button data-phone="bank">Счёт</button></nav><div class="home-line" aria-hidden="true"></div></div></div>
       </section>
     </div>
     <div id="notice" class="notice" role="status" aria-live="polite"></div>
@@ -70,4 +72,4 @@
 <script src="assets/game-webmcp.js"></script>
 <script src="assets/cases.js"></script>
 <script src="assets/engine.js"></script>
-<script src="assets/game.js" data-portrait="__PORTRAIT__" data-video="__VIDEO__"></script>
+<script src="assets/game.js" data-portrait="__PORTRAIT__" data-video="__VIDEO__" data-verdict-acquit="__VERDICT_ACQUIT__" data-verdict-guilty="__VERDICT_GUILTY__"></script>
