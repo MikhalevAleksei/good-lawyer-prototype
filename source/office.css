@@ -392,3 +392,17 @@ html,body{background:radial-gradient(1200px 600px at 70% -10%,#13211c 0,transpar
 .room-viewport[data-moving=true][data-focus=laptop] .room-phone-screen,.room-viewport[data-moving=true][data-focus=phone] .room-screen,.room-viewport[data-moving=true][data-focus=map] .room-screen,.room-viewport[data-moving=true][data-focus=map] .room-phone-screen,.room-viewport[data-moving=true][data-focus=archive] .room-phone-screen{visibility:hidden!important}
 #room-laptop-workspace .laptop{overflow:clip}
 .room-map-screen{transition:none!important}
+/* Torn note 2: scraps scattered on a desk, dragged onto a sheet. */
+.torn-note{background:radial-gradient(120% 90% at 30% 20%,#3a2a1c,#1f160f 70%)}
+.note-line{position:relative;min-height:84px;padding:14px 16px;gap:2px;border:0;border-radius:2px;background:repeating-linear-gradient(180deg,#f4efe2 0 27px,#c9d3e6 27px 28px),#f4efe2;box-shadow:0 6px 18px #0008;transition:box-shadow .15s}
+.note-line .small{color:#6b6250}
+.note-line.drop{box-shadow:0 0 0 3px #c9a45c,0 6px 18px #0008}
+.note-table{position:relative;display:block;height:260px;padding:0;margin-top:10px}
+#good-lawyer .note-piece{position:absolute;min-width:0;width:21%;max-width:120px;height:62px;padding:0 8px;display:flex;align-items:center;justify-content:center;background:radial-gradient(140% 120% at 20% 10%,#fbf7ea,#e8dfc6 75%,#d8ccad);background-size:cover;color:#24338f;font:italic 600 26px/1 Georgia,"Times New Roman",serif;letter-spacing:.02em;text-transform:none;filter:drop-shadow(2px 4px 4px #0009);box-shadow:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transform:rotate(var(--tilt,0deg));transition:transform .15s}
+#good-lawyer .note-piece span{pointer-events:none;transform:rotate(-1deg)}
+#good-lawyer .note-piece.blank{background:radial-gradient(140% 120% at 70% 30%,#f6f0dd,#ddd2b6 80%)}
+#good-lawyer .note-piece:hover{transform:rotate(var(--tilt,0deg)) scale(1.06)}
+#good-lawyer .note-piece.placed{position:relative;left:auto;top:auto;width:auto;min-width:46px;max-width:none;height:54px;padding:0 10px;margin:0 -2px;filter:drop-shadow(1px 2px 2px #0006)}
+#good-lawyer .note-piece.lifted{opacity:.25}
+#good-lawyer .note-ghost{position:fixed;z-index:60;margin:0;pointer-events:none;cursor:grabbing;transform:rotate(0deg) scale(1.08);filter:drop-shadow(6px 10px 10px #000b);transition:none}
+@media(max-width:700px){.torn-note{padding:14px 12px}.note-line{min-height:62px;padding:8px 10px}.note-table{height:216px}#good-lawyer .note-piece{width:21%;height:46px;font-size:19px}#good-lawyer .note-piece.placed{height:42px;min-width:38px;padding:0 7px}}

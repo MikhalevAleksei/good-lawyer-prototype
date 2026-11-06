@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a100e"><meta name="description" content="Хороший адвокат. Начало карьеры — стратегический юридический триллер: ночной 3D-кабинет, десять глав и ваша линия защиты."><title>Хороший адвокат. Начало карьеры</title></head><body>
 <link rel="stylesheet" href="assets/game.css?v=d8b0a7c07b0e">
-<link rel="stylesheet" href="assets/office.css?v=127d67ae3242">
+<link rel="stylesheet" href="assets/office.css?v=e2599a577719">
 <div id="good-lawyer" lang="ru" data-device="laptop">
   <section id="menu" class="main-menu" aria-labelledby="menu-title">
     <div class="menu-copy">
@@ -25,7 +25,7 @@
     <div id="training-banner" class="training-banner" hidden>Тренировка · ресурсы карьеры сохранены <button data-action="leave-training">Вернуться в карьеру →</button></div>
 
     <section id="office-room" class="office-room" aria-label="Трёхмерный кабинет адвоката" hidden>
-      <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 ₽</strong></div></div></header>
+      <header class="room-header"><div><span class="room-kicker">НОВОРЕЧЕНСК · ЧАСТНАЯ ПРАКТИКА</span><h2>Ваш кабинет.</h2><p id="room-case-summary">Каждое дело начинается за этим столом.</p></div><div class="room-status"><div><span>День</span><strong id="room-day">1</strong></div><div><span>Известность</span><strong id="room-rep">8</strong></div><div><span>Очки действий</span><strong id="room-ap">—</strong></div><div><span>Личный счёт</span><strong id="room-money">90 000 кр.</strong></div></div></header>
       <nav id="room-focus-bar" class="room-focus-bar" aria-label="Рабочие места кабинета" hidden><span id="room-focus-title">Рабочее место</span><div><button data-room-view="laptop">Ноутбук</button><button data-room-view="phone">Телефон</button><button data-room-view="archive">Архив</button><button data-room-view="map">Карта</button><button data-action="room">← Общий вид</button></div></nav>
       <div id="room-viewport" class="room-viewport">
         <img class="room-preview" src="assets/models/office-preview.png?v=c3faaabde72c" alt="Кабинет адвоката днём: окно на город, ноутбук на столе, архивный шкаф и настольная лампа слева, кресло посетителя и карта города справа, телефон, две папки и перьевая ручка">
@@ -52,7 +52,7 @@
         <div class="device-label"><span>01 / Ноутбук</span><span>Дела и публичная жизнь</span></div>
         <div class="laptop">
           <header class="brandbar"><div class="brand"><span class="seal" aria-hidden="true">ХА</span><div><strong>ХОРОШИЙ АДВОКАТ</strong><small id="lawyer-name">Частная практика</small></div></div><div class="date"><span id="district-label">Пригород</span><b id="day-label">День 1</b></div></header>
-          <div class="metrics"><div><span>ИЗВЕСТНОСТЬ</span><b id="rep">8</b><small>/ 100</small><i><em id="rep-bar"></em></i></div><div><span>ПРОФЕССИОНАЛИЗМ</span><b id="professional">5</b><small>/ 100</small><i><em id="professional-bar"></em></i></div><div class="money-metric"><span>СЧЁТ</span><b id="money">90 000 ₽</b></div><div class="danger-metric"><span>ВНИМАНИЕ СЛЕДСТВИЯ</span><b id="heat">0</b><small>/ 100</small><i><em id="heat-bar"></em></i></div></div>
+          <div class="metrics"><div><span>ИЗВЕСТНОСТЬ</span><b id="rep">8</b><small>/ 100</small><i><em id="rep-bar"></em></i></div><div><span>ПРОФЕССИОНАЛИЗМ</span><b id="professional">5</b><small>/ 100</small><i><em id="professional-bar"></em></i></div><div class="money-metric"><span>СЧЁТ</span><b id="money">90 000 кр.</b></div><div class="danger-metric"><span>ВНИМАНИЕ СЛЕДСТВИЯ</span><b id="heat">0</b><small>/ 100</small><i><em id="heat-bar"></em></i></div></div>
           <nav class="desk-nav" aria-label="Программы ноутбука"><button data-desk="overview" aria-pressed="true">Обзор</button><button data-desk="cases">Дела</button><button data-desk="dossier">Досье</button><button data-desk="witness">Свидетель</button><button data-desk="plan">План</button><button data-desk="mail">Почта <span id="mail-badge" class="badge">1</span></button><button data-desk="news">Новости</button><button data-desk="city">Карта</button><button data-desk="career">Карьера</button><select id="desk-app-select" aria-label="Другие программы"><option value="" disabled selected>Ещё</option><option value="evidence">Улики</option><option value="actions">Поручения</option><option value="notes">Блокнот</option><option value="archive">Архив</option><option value="wardrobe">Гардероб</option><option value="shop">Магазин</option><option value="settings">Настройки</option></select><p class="desk-motto" aria-hidden="true">Закон<br>Люди<br>Выбор<br>Имеют значение</p></nav>
           <div id="case-strip" class="case-strip" hidden></div>
           <div id="desktop-content" class="desktop-content"></div>
@@ -72,8 +72,8 @@
 <script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.min.js"}}</script>
 <script type="module" src="assets/office.mjs?v=a9d328d68f30"></script>
 <script src="assets/game-webmcp.js?v=963f9c9b4b1c"></script>
-<script src="assets/cases.js?v=2a16495c3f54"></script>
-<script src="assets/engine.js?v=2f92c490385f"></script>
-<script src="assets/game.js?v=b59aa3e9430b" data-portrait="assets/lawyer-portrait.jpg" data-video="assets/court.mp4" data-verdict-acquit="assets/media/verdict-acquit.mp4" data-verdict-guilty="assets/media/verdict-guilty.mp4"></script>
+<script src="assets/cases.js?v=c1f55151ba08"></script>
+<script src="assets/engine.js?v=5d6508bb4db8"></script>
+<script src="assets/game.js?v=1546c6d54f19" data-portrait="assets/lawyer-portrait.jpg" data-video="assets/court.mp4" data-verdict-acquit="assets/media/verdict-acquit.mp4" data-verdict-guilty="assets/media/verdict-guilty.mp4"></script>
 
 </body></html>

@@ -48,6 +48,7 @@ function select(g, ids, line = g.definition.bestLine) {
 }
 
 function finish(g, choice = g.definition.court.answer) {
+  if(g.suitWorn())assert.equal(g.buy('suit').ok,true,'a worn suit is replaced before court');
   assert.equal(g.beginCourt().ok,true);
   assert.equal(g.chooseCourt(choice),true);
   assert.equal(g.finishCourt(),true);
@@ -309,14 +310,14 @@ test('postponement grants time once with a real fee and judge cost, without new 
   assert.equal(accepted().postpone().ok,false,'intro case has no postponement');
 });
 
-test('investigation evidence survives cooling, defense is paid once and pressure can end the career',()=>{
+test('investigation evidence and the attention of the authorities do not cool, defense is paid once and pressure can end the career',()=>{
   const defended=accepted();
   defended.illegal(22);defended.illegal(32);
   assert.ok(defended.s.investigation);
   const evidence=defended.s.investigation.evidence,heat=defended.s.heat;
   defended.nextDay();
   assert.equal(defended.s.investigation.evidence,evidence);
-  assert.ok(defended.s.heat<heat);
+  assert.equal(defended.s.heat,heat,'the attention of the authorities only grows by itself');
   const money=defended.s.money;
   assert.equal(defended.defend().ok,true);
   assert.equal(defended.s.money,money-25000);
@@ -385,9 +386,9 @@ test('pro bono cases have no client budget or fee and support reputation at pers
   prepareGood(g);const result=finish(g);
   assert.equal(result.won,true);
   assert.equal(result.fee,0);
-  assert.equal(result.repGain,12);
+  assert.equal(result.repGain,14,'7 for the win, 5 for pro bono, 2 for a fresh suit');
   assert.equal(g.s.money,money-14000);
-  assert.equal(g.s.heat,0);
+  assert.equal(g.s.heat,8,'pro bono work is the only thing that lowers the attention of the authorities');
 });
 
 test('weekly bills keep cash nonnegative and expose debt which can be repaid',()=>{
@@ -401,7 +402,7 @@ test('weekly bills keep cash nonnegative and expose debt which can be repaid',()
   assert.equal(g.s.money,1500);
 });
 
-test('office and assistant purchases use personal money and unlock faster parallel analyst work',()=>{
+test('office and expert assistant purchases use personal money; the assistant makes expert work cheaper and faster',()=>{
   const g=accepted();g.s.completed=[{id:'previous-one'},{id:'previous-two'}];
   const budget=g.s.active.budget,money=g.s.money;
   assert.equal(g.buy('assistant').ok,false,'an assistant requires office space');
@@ -410,12 +411,16 @@ test('office and assistant purchases use personal money and unlock faster parall
   assert.equal(g.s.money,money-48000);
   assert.equal(g.s.active.budget,budget,'client money cannot buy office equipment or staff');
   assert.equal(g.weeklyCost(),12000);
+  const ap=g.s.active.ap;
   assert.equal(g.order('documents').ok,true);
-  assert.equal(g.order('expert').ok,true,'an assistant gives Irina a second task slot');
+  assert.equal(g.s.active.ap,ap-1,'2 AP without the assistant, 1 AP with it');
+  assert.equal(g.order('expert').ok,false,'the expert still works on one task at a time');
   assert.ok(g.s.active.pending.every(t=>t.due===g.s.day+1));
   g.nextDay();
   assert.equal(g.s.active.materials.some(m=>m.id==='documents'),true);
-  assert.equal(g.s.active.materials.some(m=>m.id==='expert'),true);
+  const left=g.s.active.ap;assert.equal(g.order('expert').ok,true);
+  assert.equal(g.s.active.ap,left-2,'3 AP without the assistant, 2 AP with it');
+  assert.ok(g.s.active.pending.some(t=>t.key==='expert'&&t.due===g.s.day+1),'and a day faster');
 });
 
 test('new game resets career, pending work and training state',()=>{
@@ -468,18 +473,20 @@ test('real campaign remains reachable after every early case is lost',()=>{
   assert.equal(g.s.completed.length,10);
 });
 
-test('a fine permits recovery through the accessible pro bono branch without opening prestigious cases',()=>{
+test('a fine closes the fame-gated case, while the professional case and the legal clinic stay open',()=>{
   const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases;
   const g=new Game(cases),first=cases.find(c=>c.step===1);
   assert.equal(g.offer(first.id).ok,true);
-  for(const id of ['admin','waiter','driver'])assert.equal(g.epCoordinate(id).ok,false,'witnesses refuse to coordinate');
+  assert.equal(g.epCoordinate('admin').ok,false,'coordinating testimony is offered only after an interview');assert.equal(g.s.heat,0);
+  for(const id of ['admin','waiter','driver']){assert.equal(g.epInterview(id,'ask').ok,true);assert.equal(g.epCoordinate(id).ok,false,'witnesses refuse to coordinate');}
   assert.ok(g.s.investigation,'three attempts to coordinate testimony open an investigation');
   while(!g.planOpen()&&!g.s.ending)g.nextDay();
   if(!g.s.ending)finish(g,(first.court.answer+1)%3);
   assert.ok(g.s.mail.some(m=>m.title==='Назначен штраф'));
   assert.equal(g.s.ending,null);
   const next=g.choices().sort((a,b)=>a.rating-b.rating);
-  assert.equal(next.some(c=>g.eligible(c)),false,'the reputation penalty blocks ordinary offers');
+  assert.equal(g.eligible(next.at(-1)),false,'the reputation penalty blocks the fame-gated case');
+  assert.equal(g.requirement(next[0]).rep,0,'the first case of a chapter asks only for professionalism');
   assert.equal(g.offer(next.at(-1).id,true).ok,false,'pro bono does not unlock the prestigious branch');
   assert.equal(g.offer(next[0].id,true).ok,true,'the legal clinic offers a path to recover reputation');
   assert.equal(g.s.active.budget,0);
@@ -487,7 +494,7 @@ test('a fine permits recovery through the accessible pro bono branch without ope
   assert.equal(g.s.active.personalFunding,true);
   prepareGood(g);
   assert.equal(finish(g).won,true);
-  assert.equal(g.choices().some(c=>g.eligible(c)),true,'the successful pro bono case restores ordinary access');
+  assert.equal(g.choices().some(c=>g.eligible(c)),true,'the next chapter stays reachable');
 });
 
 test('the court reply changes the score of a well-prepared standard defence',()=>{
@@ -503,23 +510,47 @@ test('chapter 1 follows the episode script: daily AP, two orders a day, same-day
   const g=new Game(cases),c=cases.find(x=>x.step===1);
   assert.equal(g.offer(c.id).ok,true);
   const a=g.s.active;
-  assert.equal(a.deadline,7,'six days of preparation, the hearing on day 7');assert.equal(a.ap,12);
+  assert.equal(a.deadline,7,'six days of preparation, the hearing on day 7');assert.equal(a.ap,20);
   assert.equal(g.order('documents').ok,false,'generic orders are closed in the scripted case');
   assert.equal(g.epOrder('cameras').ok,true);assert.equal(g.epOrder('search').ok,true);
   assert.match(g.epOrderBlock('profile_admin'),/2 поручения/,'two orders a day for the detective');
   assert.match(g.epOrderBlock('study_bus'),/Сначала/,'the expert needs the recordings first');
   g.nextDay();
-  assert.equal(a.ap,12-4+2,'each new day restores 2 AP');
+  assert.equal(a.ap,20-4+1,'each new day restores 1 AP');
   assert.equal(a.ep.noteFound,true);
   assert.equal(g.restoreNote([1,0,2,3,4,5,6,7]).ok,false,'a wrong order does not restore the note');
   assert.equal(g.restoreNote([0,1,2,3,8,4,5,6,7]).ok,true,'blank scraps are ignored');
-  assert.equal(a.ap,12,'the restored note gives 2 AP');assert.ok(a.ep.facts.includes('note'));
+  assert.equal(a.ap,19,'the restored note gives 2 AP');assert.ok(a.ep.facts.includes('note'));
   assert.equal(g.epOrder('profile_admin').ok,true);g.nextDay();
   const before=a.ap;assert.equal(g.epOrder('extra_admin').ok,true);
   assert.equal(a.ap,before-1);assert.ok(a.ep.facts.includes('admin_flats'),'follow-ups arrive the same day');
   assert.equal(g.epInterview('admin','ask').ok,true);assert.equal(g.epInterview('admin','free').ok,false,'one interview type per witness');
   assert.equal(g.epAsk('admin','keys').ok,true);assert.equal(g.epPort('admin').ok,true);
   assert.ok(['admin_lock','admin_port'].every(id=>a.ep.facts.includes(id)));
+  assert.equal(g.epCoordinate('driver').ok,false,'no coordination before an interview');
+});
+
+test('the suit wears 15% per case, gives career points below 45% and blocks court at 75%',()=>{
+  const g=accepted();assert.equal(g.s.wear,0);
+  prepareGood(g);const first=finish(g);
+  assert.equal(first.suitBonus,true);assert.equal(first.repGain,7+2);assert.equal(first.professionalGain,6+1);assert.equal(g.s.wear,15);
+  g.s.wear=45;assert.equal(g.suitBonus(),false,'no bonus from 45% wear');
+  g.s.wear=75;assert.equal(g.suitWorn(),true);
+  const c=fixture({id:'second'}),h=new Game([c]);h.s.wear=75;assert.equal(h.offer(c.id).ok,true);prepareGood(h);
+  assert.equal(h.beginCourt().ok,false,'a worn suit cannot go to court');assert.match(h.s.notice,/75%/);
+  h.s.money=12000;h.s.debt=5000;assert.equal(h.buy('suit').ok,true,'a new suit can be bought even with debt');
+  assert.equal(h.s.wear,0);assert.equal(h.s.money,0);assert.equal(h.buy('suit').ok,false,'a fresh suit needs no replacement');
+  assert.equal(h.beginCourt().ok,true);
+});
+
+test('the two cases of a chapter ask for different characteristics',()=>{
+  const imported=require(casesPath),cases=Array.isArray(imported)?imported:imported.CASES||imported.cases,g=new Game(cases);
+  for(let step=2;step<=10;step++){
+    const [first,second]=cases.filter(c=>c.step===step);
+    const a=g.requirement(first),b=g.requirement(second);
+    assert.ok(a.professional>0&&a.rep===0,'first case: professionalism '+first.id);
+    assert.ok(b.rep>0&&b.professional===0,'second case: fame '+second.id);
+  }
 });
 
 test('chapter 1 is won only with the waiter testimony and the corrected bus clock',()=>{

@@ -16,7 +16,7 @@
   const fresh = () => ({
     version:3,day:1,name:'Александр Ветров',rep:8,professional:5,shadow:0,heat:0,money:90000,debt:0,
     stage:1,wins:0,completed:[],active:null,ending:null,campaignComplete:false,training:false,
-    office:0,assistant:false,suit:false,wear:100,illegalDays:[],investigation:null,
+    office:0,assistant:false,suit:true,wear:0,illegalDays:[],investigation:null,
     transactions:[{day:1,account:'personal',name:'Стартовый капитал',amount:90000}],
     mail:[{day:1,from:'Секретарь',title:'Первое дело в пригороде',body:'Анна Лукина ищет защитника. Изучите её историю, отправьте предложение и начните подготовку. Дни меняются только по вашей команде.'}],
     news:[],chats:{mark:[],irina:[],contact:[]},unread:1,result:null,notice:'Выберите первое дело и предложите клиенту защиту.'
@@ -30,16 +30,20 @@
     log(account,name,amount) { this.s.transactions.unshift({day:this.s.day,account,name,amount}); }
     personal(name,amount) { this.s.money+=amount; this.log('personal',name,amount); }
     choices() { return this.cases.filter(c=>c.step===this.s.stage); }
-    requirement(c) { return {rep:c.rating,professional:5+(c.step-1)*2}; }
+    requirement(c) {
+      const pair=this.cases.filter(x=>x.step===c.step);
+      if(pair.length<2)return {rep:c.rating,professional:5+(c.step-1)*2};
+      return pair[0]===c?{rep:0,professional:5+(c.step-1)*2}:{rep:c.rating,professional:0};
+    }
     eligible(c) { const r=this.requirement(c); return this.s.rep>=r.rep && this.s.professional>=r.professional; }
     offer(id,probono=false) {
       const c=this.cases.find(x=>x.id===id);
       if(!c||this.s.active||this.s.ending||this.s.campaignComplete||c.step!==this.s.stage) return this.say('Это дело сейчас недоступно.',false);
-      const clinicReferral=probono&&c.id===this.choices()[0]?.id&&this.s.professional>=this.requirement(c).professional;
+      const clinicReferral=probono&&c.id===this.choices()[0]?.id;
       if(!this.eligible(c)&&!clinicReferral) {
         const r=this.requirement(c);
         const key=id+':'+this.s.rep+':'+this.s.professional;
-        if(this.lastRefusal!==key) { this.mail(c.client,'Отказ: «'+c.title+'»',`Мне нужен адвокат с известностью ${r.rep} и профессиональным рейтингом ${r.professional}. Сейчас у вас ${this.s.rep} и ${this.s.professional}. Возьмите другое дело этой главы.`); this.lastRefusal=key; }
+        if(this.lastRefusal!==key) { const need=[r.rep?`известностью не ниже ${r.rep} (у вас ${this.s.rep})`:'',r.professional?`профессионализмом не ниже ${r.professional} (у вас ${this.s.professional})`:''].filter(Boolean).join(' и ');this.mail(c.client,'Отказ: «'+c.title+'»',`Мне нужен адвокат с ${need}. Возьмите другое дело этой главы.`); this.lastRefusal=key; }
         return this.say('Пришёл отказ клиента. Причина указана в почте.',false);
       }
       this.startCase(c,probono);
@@ -61,6 +65,7 @@
     preparing() { const a=this.s.active; return !!a && a.phase==='prepare' && this.s.day<a.deadline && !this.s.ending; }
     planOpen() { const a=this.s.active; return !!a&&(this.s.day>=a.deadline-1||a.ap===0); }
     canSpend(ap) { return this.preparing()&&this.s.active.ap>=ap; }
+    orderAp(o) { return o.agent==='irina'&&this.s.assistant?Math.max(1,o.ap-1):o.ap; }
     quote(key) {
       const o=ORDERS[key],a=this.s.active;
       if(!o||!a) return null;
@@ -73,9 +78,8 @@
       if(a.ep) return 'В этом деле — свои поручения';
       if(!this.preparing()) return 'Подготовка завершена';
       if(a.done.includes(key)||a.pending.some(t=>t.key===key)) return 'Поручение уже выдано';
-      if(a.ap<o.ap) return 'Недостаточно ОД';
-      const slots=this.s.assistant&&o.agent==='irina'?2:1;
-      if(a.pending.filter(t=>ORDERS[t.key].agent===o.agent).length>=slots) return 'Исполнитель занят';
+      if(a.ap<this.orderAp(o)) return 'Недостаточно ОД';
+      if(a.pending.some(t=>ORDERS[t.key].agent===o.agent)) return 'Исполнитель занят';
       if(o.agent==='contact'&&this.s.stage<3&&!this.s.training) return 'Контакт появится в главе 3';
       const q=this.quote(key);
       if(this.s.day+q.days>a.deadline) return 'Не успеет к заседанию';
@@ -86,7 +90,7 @@
     order(key) {
       const blocked=this.orderBlock(key); if(blocked) return this.say(blocked,false);
       const a=this.s.active,o=ORDERS[key],q=this.quote(key);
-      a.ap-=o.ap;a.budget-=q.client;a.invested+=q.personal;
+      a.ap-=this.orderAp(o);a.budget-=q.client;a.invested+=q.personal;
       if(q.client) this.log('client',o.label,-q.client);
       if(q.personal) this.personal(o.label,-q.personal);
       a.pending.push({key,due:this.s.day+q.days,started:this.s.day});
@@ -177,7 +181,6 @@
       const doc=selected.findIndex(m=>m.id==='documents'),witness=selected.findIndex(m=>m.id==='witness');
       if(doc>=0&&witness>=0)rows.push({label:doc<witness?'Сначала факт, затем свидетель':'Свидетель выступает до подтверждения',value:doc<witness?4:-3});
       if(selected.some(m=>m.kind===c.judge.prefers&&!m.risky))rows.push({label:'Предпочтение судьи',value:3});
-      if(this.s.suit&&this.s.wear>0)rows.push({label:'Деловой имидж',value:2});
       if(a.postponed)rows.push({label:'Недовольство судьи переносом',value:-4});
       if(choice!==null)rows.push({label:choice===c.court.answer?'Точная реакция в суде':'Неубедительный ответ суду',value:choice===c.court.answer?8:-8});
       if(choice!==null&&selected.some(m=>m.id==='forge'))rows.push({label:'Подложный документ исключён',value:-28});
@@ -190,8 +193,11 @@
       this.mail('Канцелярия суда','Перенос согласован',`Новая дата: день ${a.deadline}. Гонорар уменьшен на 20%, итог защиты получит штраф 4 балла. Запас ОД не восстановлен.`);
       return this.say('Заседание перенесено на два дня. Повторный перенос невозможен.');
     }
+    suitBonus() { return this.s.wear<45; }
+    suitWorn() { return this.s.wear>=75&&!this.s.training; }
     beginCourt() {
       const a=this.s.active;if(!a||!this.planOpen()||a.phase!=='prepare'||this.s.ending)return this.say('Суд доступен после открытия плана.',false);
+      if(this.suitWorn())return this.say(`Костюм изношен на ${this.s.wear}%: в таком виде в суд идти нельзя. Купите новый у зеркала.`,false);
       a.phase='court';a.courtChoice=null;return this.say('Судья задаёт вопрос по вашей защите.');
     }
     chooseCourt(index) {const a=this.s.active;if(!a||a.phase!=='court'||a.courtChoice!==null||!Number.isInteger(index)||index<0||index>2)return false;a.courtChoice=index;return true;}
@@ -200,15 +206,15 @@
     resolve(late) {
       const a=this.s.active,c=this.definition;if(!a)return;
       const report=this.assessment(a.courtChoice),won=!late&&report.won;
-      const fee=Math.round(a.fee*(won?1:.4)),repGain=(won?7:3)+(a.probono?5:0),professionalGain=won?6:2;
+      const suitBonus=!late&&this.suitBonus(),fee=Math.round(a.fee*(won?1:.4)),repGain=(won?7:3)+(a.probono?5:0)+(suitBonus?2:0),professionalGain=(won?6:2)+(suitBonus?1:0);
       if(a.budget)this.log('client','Остаток бюджета возвращён клиенту',-a.budget);
       this.personal('Гонорар: '+c.title,fee);
       this.s.rep=clamp(this.s.rep+repGain);this.s.professional=clamp(this.s.professional+professionalGain);this.s.wins+=won?1:0;
       if(a.probono)this.s.heat=Math.max(0,this.s.heat-12);
-      if(this.s.suit)this.s.wear=Math.max(0,this.s.wear-15);
-      const result={...report,id:c.id,title:c.title,won,late,fee,repGain,professionalGain,invested:a.invested,returned:a.budget,training:this.s.training,day:this.s.day};
+      if(!late)this.s.wear=Math.min(100,this.s.wear+15);
+      const result={...report,id:c.id,title:c.title,won,late,fee,repGain,professionalGain,invested:a.invested,returned:a.budget,training:this.s.training,day:this.s.day,suitBonus};
       this.s.completed.push(result);this.s.result=result;this.s.active=null;
-      this.mail(c.client,won?'Защита сработала':'Дело завершено',`${late?'Слушание пропущено.':won?'Задача защиты выполнена.':'Доводов оказалось недостаточно.'} Начислен гонорар ${fee.toLocaleString('ru-RU')} ₽. Неиспользованный бюджет возвращён.`);
+      this.mail(c.client,won?'Защита сработала':'Дело завершено',`${late?'Слушание пропущено.':won?'Задача защиты выполнена.':'Доводов оказалось недостаточно.'} Начислен гонорар ${fee.toLocaleString('ru-RU')} кр. Неиспользованный бюджет возвращён.`);
       this.s.news.unshift({day:this.s.day,title:(won?'Успех защиты: ':'Вердикт: ')+c.title,body:late?'Адвокат пропустил заседание.':c.objective+' Результат: '+(won?'цель достигнута.':'цель не достигнута.')});
       const bonus=a.ep&&c.episode.bonus;
       if(bonus&&won&&bonus.facts.every(id=>a.ep.facts.includes(id))){result.bonus=true;this.mail(bonus.mail.from,bonus.mail.title,bonus.mail.body);this.s.news.unshift({day:this.s.day,title:bonus.news.title,body:bonus.news.body});}
@@ -228,7 +234,7 @@
       if(a.ep.pending.some(t=>t.id===id))return 'Поручение уже выдано';
       const missing=(o.requires||[]).find(r=>!a.ep.done.includes(r));
       if(missing)return 'Сначала: '+ep.orders.find(x=>x.id===missing).label.toLowerCase();
-      if(a.ap<o.ap)return 'Недостаточно ОД';
+      if(a.ap<this.orderAp(o))return 'Недостаточно ОД';
       if((!ep.perDayAgent||o.agent===ep.perDayAgent)&&this.epToday()[o.agent]>=ep.perDay)return 'Сегодня уже '+ep.perDay+' поручения '+(o.agent==='mark'?'детективу':'этому исполнителю');
       if(this.s.day+o.days>a.deadline)return 'Не успеет к заседанию';
       return '';
@@ -236,7 +242,7 @@
     epOrder(id) {
       const blocked=this.epOrderBlock(id);if(blocked)return this.say(blocked,false);
       const a=this.s.active,o=this.definition.episode.orders.find(x=>x.id===id);
-      a.ap-=o.ap;this.epToday()[o.agent]++;
+      a.ap-=this.orderAp(o);this.epToday()[o.agent]++;
       this.s.chats[o.agent].push({day:this.s.day,mine:true,text:o.label+(o.days?`. Срок: день ${this.s.day+o.days}.`:'. Нужно сегодня.')});
       if(!o.days){this.epFinish(o);return this.say('Готово: '+o.label.toLowerCase()+'. Результат в досье.');}
       a.ep.pending.push({id,due:this.s.day+o.days,started:this.s.day});
@@ -273,12 +279,12 @@
     }
     epCoordinate(id) {
       const a=this.s.active,ep=this.definition?.episode,w=this.epWitness(id);
-      if(!w||!a?.ep||!this.preparing()||a.ep.coordinated.includes(id))return this.say('Это предложение сейчас недоступно.',false);
+      if(!w||!a?.ep||!this.preparing()||a.ep.coordinated.includes(id)||!a.ep.witnesses[id]?.mode)return this.say('Это предложение сейчас недоступно.',false);
       if(a.ap<ep.coordinateAp)return this.say('Недостаточно ОД.',false);
       a.ap-=ep.coordinateAp;a.ep.coordinated.push(id);this.illegal(ep.coordinateHeat);a.ep.penalty+=w.coordinatePenalty||0;
       const record=a.ep.witnesses[id]=a.ep.witnesses[id]||{mode:null,asked:[],log:[],port:false};
       record.log.push({q:'Давайте согласуем ваши показания в суде.',a:w.coordinate});
-      return this.say('Свидетель отказался. Попытка согласовать показания повышает внимание следствия.',false);
+      return this.say('Свидетель отказался. Попытка согласовать показания повышает внимание властей.',false);
     }
     restoreNote(order) {
       const a=this.s.active,note=this.definition?.episode?.note;
@@ -317,13 +323,13 @@
       const p=this.s.investigation;if(!p||this.s.day<p.due)return;
       this.s.investigation=null;
       if(p.evidence>=75) {this.s.ending='prison';this.mail('Суд','Практика закрыта','Вмешательство в показания доказано. Назначено тюремное заключение.');}
-      else {if(p.evidence>=50){this.bill('Штраф по проверке',35000);this.s.rep=Math.max(0,this.s.rep-8);}this.s.heat=Math.max(0,this.s.heat-20);this.mail('Следственный отдел',p.evidence>=50?'Назначен штраф':'Проверка закрыта',`Сила обвинения: ${p.evidence}/100. История прежних действий остаётся в материалах.`);}
+      else {if(p.evidence>=50){this.bill('Штраф по проверке',35000);this.s.rep=Math.max(0,this.s.rep-8);}this.mail('Следственный отдел',p.evidence>=50?'Назначен штраф':'Проверка закрыта',`Сила обвинения: ${p.evidence}/100. История прежних действий остаётся в материалах.`);}
     }
     weeklyCost() {return 3000+(this.s.office?4000:0)+(this.s.assistant?5000:0);}
-    bill(label,amount) {const paid=Math.min(this.s.money,amount);if(paid)this.personal(label,-paid);if(paid<amount){this.s.debt+=amount-paid;this.mail('Банк','Задолженность по расходам',`${label}: не оплачено ${(amount-paid).toLocaleString('ru-RU')} ₽. Долг можно погасить после поступления гонорара.`);}}
+    bill(label,amount) {const paid=Math.min(this.s.money,amount);if(paid)this.personal(label,-paid);if(paid<amount){this.s.debt+=amount-paid;this.mail('Банк','Задолженность по расходам',`${label}: не оплачено ${(amount-paid).toLocaleString('ru-RU')} кр. Долг можно погасить после поступления гонорара.`);}}
     advanceDay() {
       if(this.s.ending)return;
-      this.s.day++;this.s.heat=Math.max(0,this.s.heat-2);
+      this.s.day++;
       this.completeTasks();
       if(this.s.active?.ep&&this.s.day<=this.s.active.deadline)this.s.active.ap+=this.definition.episode.apPerDay;
       if((this.s.day-1)%7===0)this.bill('Аренда и персонал за неделю',this.weeklyCost());
@@ -334,17 +340,17 @@
     nextDay() {if(this.s.ending||this.s.active?.phase==='court')return false;this.say('Наступил следующий игровой день.');this.advanceDay();return true;}
     buy(item) {
       if(this.s.training||this.s.ending)return this.say('Управление карьерой сейчас недоступно.',false);
-      const prices={office:30000,assistant:18000,suit:12000,repair:3000};
+      const prices={office:30000,assistant:18000,suit:12000};
       const price=prices[item];
-      if(!price||(item==='office'&&this.s.office)||(item==='assistant'&&this.s.assistant)||(item==='suit'&&this.s.suit)||(item==='repair'&&(!this.s.suit||this.s.wear===100)))return this.say('Уже приобретено или не требуется.',false);
+      if(!price||(item==='office'&&this.s.office)||(item==='assistant'&&this.s.assistant)||(item==='suit'&&this.s.wear===0))return this.say('Уже приобретено или не требуется.',false);
       if(item==='office'&&this.s.completed.length<2)return this.say('Офис доступен после двух дел.',false);
       if(item==='assistant'&&!this.s.office)return this.say('Для помощника нужен офис.',false);
-      if(this.s.money<price||this.s.debt)return this.say('Нужны личные средства без задолженности.',false);
-      this.personal({office:'Открытие офиса',assistant:'Наём помощника',suit:'Деловой костюм',repair:'Уход за костюмом'}[item],-price);
-      if(item==='office')this.s.office=1;else if(item==='assistant')this.s.assistant=true;else {this.s.suit=true;this.s.wear=100;}
+      if(this.s.money<price||(this.s.debt&&item!=='suit'))return this.say(item==='suit'?'Не хватает личных средств.':'Нужны личные средства без задолженности.',false);
+      this.personal({office:'Открытие офиса',assistant:'Наём помощника эксперта',suit:'Новый деловой костюм'}[item],-price);
+      if(item==='office')this.s.office=1;else if(item==='assistant')this.s.assistant=true;else {this.s.suit=true;this.s.wear=0;}
       return this.say('Покупка оплачена с личного счёта. Расходы обновлены в банке.');
     }
-    payDebt() {const amount=Math.min(this.s.money,this.s.debt);if(amount){this.personal('Погашение задолженности',-amount);this.s.debt-=amount;}return this.say(this.s.debt?'Остаток долга: '+this.s.debt+' ₽.':'Задолженность погашена.');}
+    payDebt() {const amount=Math.min(this.s.money,this.s.debt);if(amount){this.personal('Погашение задолженности',-amount);this.s.debt-=amount;}return this.say(this.s.debt?'Остаток долга: '+this.s.debt+' кр.':'Задолженность погашена.');}
     training(id) {
       if(!this.s.campaignComplete||this.s.active||this.s.investigation||this.s.training||this.s.ending||!this.s.completed.some(c=>c.id===id))return this.say('Повтор доступен после кампании и завершения расследования.',false);
       const c=this.cases.find(c=>c.id===id);this.career=clone(this.s);this.s=fresh();this.s.training=true;this.s.stage=c.step;this.startCase(c);return this.say('Тренировка: её расходы и результат не изменят карьеру.');

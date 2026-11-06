@@ -30,7 +30,7 @@ fs.mkdirSync(out,{recursive:true});
   }
   await click('[data-object="FolderArchive"]');assert.match(await p.locator('#room-archive-shelves').innerText(),/История вашей практики/);await room();
   await click('#room-laptop-home [data-room-view="cases"]');await click('[data-offer="first-signature"]');
-  await room();assert.match(await p.locator('#room-case-summary').innerText(),/Касса в 20:08/);assert.match(await p.locator('#room-ap').innerText(),/12/);
+  await room();assert.match(await p.locator('#room-case-summary').innerText(),/Касса в 20:08/);assert.match(await p.locator('#room-ap').innerText(),/20/);
   await click('[data-object="FolderCurrent"]');assert.match(await p.locator('#desktop-content').innerText(),/Материалы дела/);await room();
   await click('[data-object="FountainPen"]');await p.locator('#case-notes').fill('Проверить время открытия кассы.');await room();
   await click('[data-object="FountainPen"]');assert.equal(await p.locator('#case-notes').inputValue(),'Проверить время открытия кассы.');await room();

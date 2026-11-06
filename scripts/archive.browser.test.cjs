@@ -72,6 +72,7 @@ const out=process.env.QA_DIR||'/private/tmp/lawyer-archive-qa';fs.mkdirSync(out,
     if(win){check(g.order('documents'));check(g.order('observe'));check(g.chooseApproach('free'));for(const q of ['events','time','detail'])check(g.question(q));g.puzzleSelect(c.puzzle.answer);check(g.solvePuzzle());}
     while(!g.planOpen())g.nextDay();
     if(win){for(const id of ['documents','observe','witness','puzzle'])check(g.toggleMaterial(id));check(g.setLine(c.bestLine));}
+    if(g.suitWorn())check(g.buy('suit'));
     check(g.beginCourt());if(!g.chooseCourt(win?c.court.answer:(c.court.answer+1)%3)||!g.finishCourt())throw Error('Court failed');
    }
    OfficeRoom.setMotion(false);
